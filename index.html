@@ -1,0 +1,3234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitcoin Play · Educational Simulator</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f7931a'/%3E%3Ctext x='16' y='24' text-anchor='middle' font-size='22' font-family='Arial,sans-serif' font-weight='900' fill='white'%3E%E2%82%BF%3C/text%3E%3C/svg%3E">
+<script>
+  // Apply saved theme before first paint to avoid a flash of dark
+  try {
+    var t = localStorage.getItem('bitcoin-play-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+</script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg-2: #0f1422;
+    --surface: #131a2c;
+    --surface-2: #1a2238;
+    --border: #232b44;
+    --border-strong: #2d375a;
+    --text: #e8eaed;
+    --text-muted: #8a92a8;
+    --text-dim: #5a6380;
+    --orange: #f7931a;
+    --orange-soft: #ffb347;
+    --orange-glow: rgba(247, 147, 26, 0.25);
+    --green: #4ade80;
+    --green-soft: rgba(74, 222, 128, 0.12);
+    --red: #f87171;
+    --red-soft: rgba(248, 113, 113, 0.12);
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --code-bg: #060914;
+    --header-bg: rgba(10, 14, 26, 0.85);
+    --body-glow-orange: rgba(247, 147, 26, 0.10);
+    --body-glow-blue: rgba(96, 165, 250, 0.06);
+    --shadow-toast: 0 8px 24px rgba(0,0,0,0.4);
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  }
+
+  [data-theme="light"] {
+    --bg: #f8fafc;
+    --bg-2: #f1f5f9;
+    --surface: #ffffff;
+    --surface-2: #f8fafc;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --text: #0f172a;
+    --text-muted: #475569;
+    --text-dim: #94a3b8;
+    --orange: #f7931a;
+    --orange-soft: #c2410c;
+    --orange-glow: rgba(247, 147, 26, 0.18);
+    --green: #15803d;
+    --green-soft: rgba(22, 163, 74, 0.12);
+    --red: #dc2626;
+    --red-soft: rgba(220, 38, 38, 0.10);
+    --blue: #2563eb;
+    --purple: #7c3aed;
+    --header-bg: rgba(255, 255, 255, 0.88);
+    --body-glow-orange: rgba(247, 147, 26, 0.08);
+    --body-glow-blue: rgba(96, 165, 250, 0.05);
+    --shadow-toast: 0 8px 24px rgba(15, 23, 42, 0.12);
+    /* --code-bg stays dark in both themes (terminals/code always look like terminals) */
+  }
+
+  /* Dark code blocks: re-vivify the brand colors locally so they stay readable */
+  [data-theme="light"] .terminal,
+  [data-theme="light"] .console,
+  [data-theme="light"] .console-input-wrap,
+  [data-theme="light"] .nonce-display,
+  [data-theme="light"] .hash-bar,
+  [data-theme="light"] .attempts,
+  [data-theme="light"] .hash-demo .hash-output,
+  [data-theme="light"] .chapter-body pre {
+    --text: #e8eaed;
+    --text-muted: #8a92a8;
+    --text-dim: #5a6380;
+    --green: #4ade80;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --orange: #f7931a;
+    --orange-soft: #ffb347;
+    color: #d8dde8;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    background-image:
+      radial-gradient(at 80% -10%, var(--body-glow-orange), transparent 50%),
+      radial-gradient(at -10% 50%, var(--body-glow-blue), transparent 50%);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  a { color: var(--orange-soft); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre, .mono { font-family: var(--mono); }
+
+  /* ============== HEADER ============== */
+  .header {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--header-bg);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .logo {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--orange), #c66800);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 22px; color: #fff;
+    box-shadow: 0 4px 16px var(--orange-glow);
+  }
+  .header-title { display: flex; flex-direction: column; gap: 2px; }
+  .header-title h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .header-title .sub { font-size: 11px; color: var(--text-muted); font-family: var(--mono); }
+  .header-spacer { flex: 1; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; font-family: var(--mono);
+    background: var(--green-soft); color: var(--green);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+  }
+  .badge::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .stats-mini { display: flex; gap: 14px; font-family: var(--mono); font-size: 12px; }
+  .stats-mini span { color: var(--text-muted); }
+  .stats-mini b { color: var(--text); font-weight: 600; }
+
+  /* ============== NAV ============== */
+  .nav {
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex; gap: 4px;
+    overflow-x: auto;
+  }
+  .nav button {
+    background: none; border: none;
+    color: var(--text-muted);
+    padding: 14px 16px;
+    font-size: 13px; font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav button:hover { color: var(--text); }
+  .nav button.active {
+    color: var(--orange);
+    border-bottom-color: var(--orange);
+  }
+  .nav button .num {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: var(--surface);
+    padding: 2px 6px; border-radius: 4px;
+    color: var(--text-dim);
+  }
+  .nav button.active .num { background: var(--orange-glow); color: var(--orange); }
+
+  /* ============== MAIN ============== */
+  main { max-width: 1280px; margin: 0 auto; padding: 32px 24px 80px; }
+  .section { display: none; animation: fadeIn 0.3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  h2 { font-size: 24px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h3 { font-size: 14px; font-weight: 600; margin: 0 0 12px; color: var(--text); text-transform: uppercase; letter-spacing: 0.06em; }
+  .lede { color: var(--text-muted); font-size: 15px; margin: 0 0 28px; max-width: 720px; }
+
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* ============== CARDS ============== */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+  .card-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); }
+
+  /* ============== BUTTONS ============== */
+  button.btn, .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  button.btn:hover { border-color: var(--orange); color: var(--orange-soft); }
+  button.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.btn.primary {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: #1a0d00;
+    font-weight: 600;
+  }
+  button.btn.primary:hover {
+    background: var(--orange-soft);
+    color: #1a0d00;
+    box-shadow: 0 4px 16px var(--orange-glow);
+  }
+  button.btn.ghost { background: transparent; }
+
+  /* ============== INPUTS ============== */
+  input, select {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: var(--mono);
+    width: 100%;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-glow); }
+  label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); display: block; margin-bottom: 6px; }
+  .form-row { margin-bottom: 14px; }
+
+  /* ============== TERMINAL / CODE ============== */
+  .terminal {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: var(--mono); font-size: 12.5px;
+    line-height: 1.6;
+    color: #d8dde8;
+    overflow-x: auto;
+    position: relative;
+  }
+  .terminal .prompt { color: var(--green); user-select: none; }
+  .terminal .cmd { color: var(--orange-soft); }
+  .terminal .out { color: var(--text-muted); }
+  .terminal .comment { color: var(--text-dim); font-style: italic; }
+  .copy-btn {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text-muted); padding: 4px 10px; border-radius: 6px;
+    font-size: 11px; cursor: pointer; font-family: var(--mono);
+  }
+  .copy-btn:hover { color: var(--orange); border-color: var(--orange); }
+
+  .key-value { display: grid; grid-template-columns: 160px 1fr; gap: 4px 12px; font-family: var(--mono); font-size: 12.5px; }
+  .key-value dt { color: var(--text-muted); }
+  .key-value dd { margin: 0; color: var(--text); word-break: break-all; }
+
+  /* ============== HEX HIGHLIGHTING ============== */
+  .hash {
+    font-family: var(--mono);
+    word-break: break-all;
+    font-size: 12px;
+  }
+  .hash .leading-zeros { color: var(--green); font-weight: 700; }
+  .hash .rest { color: var(--text-muted); }
+
+  /* ============== INTRO ============== */
+  .hero {
+    background: linear-gradient(135deg, var(--surface), var(--surface-2));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "₿"; position: absolute; right: -40px; bottom: -80px;
+    font-size: 360px; line-height: 1;
+    color: var(--orange); opacity: 0.09;
+    font-weight: 900;
+  }
+  [data-theme="light"] .hero::before { opacity: 0.14; }
+  .hero h2 { font-size: 36px; margin-bottom: 12px; }
+  .hero .lede { font-size: 16px; max-width: 640px; }
+  .hero .actions { display: flex; gap: 12px; margin-top: 20px; }
+
+  .network-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 32px 0; }
+  .network-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s ease;
+  }
+  .network-card.active { border-color: var(--orange); box-shadow: 0 4px 24px var(--orange-glow); }
+  .network-card h4 { margin: 0 0 8px; font-size: 16px; }
+  .network-card .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-family: var(--mono); font-size: 10px; margin-bottom: 12px; }
+  .network-card .tag.real { background: var(--red-soft); color: var(--red); }
+  .network-card .tag.test { background: rgba(96, 165, 250, 0.12); color: var(--blue); }
+  .network-card .tag.dev { background: var(--orange-glow); color: var(--orange); }
+  .network-card p { margin: 0; font-size: 13px; color: var(--text-muted); }
+
+  @media (max-width: 700px) { .network-grid { grid-template-columns: 1fr; } }
+
+  /* ============== MINING LAB ============== */
+  .mining-rig {
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .mining-rig.active { border-color: var(--orange); }
+  .mining-rig.found { animation: foundFlash 0.6s ease; }
+  @keyframes foundFlash {
+    0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6); }
+    100% { box-shadow: 0 0 0 30px rgba(74, 222, 128, 0); }
+  }
+
+  .header-fields {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 8px 14px;
+    font-family: var(--mono); font-size: 12px;
+    margin-bottom: 16px;
+  }
+  .header-fields dt { color: var(--text-muted); padding-top: 2px; }
+  .header-fields dd { margin: 0; color: var(--text); word-break: break-all; }
+  .header-fields dd.live { color: var(--orange); font-weight: 600; }
+
+  .nonce-display {
+    display: flex; align-items: baseline; gap: 16px;
+    padding: 16px;
+    background: var(--code-bg);
+    border-radius: 10px;
+    margin: 16px 0;
+    border: 1px solid var(--border);
+  }
+  .nonce-display .label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; }
+  .nonce-display .value { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--orange); }
+
+  .hash-bar {
+    background: var(--code-bg);
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-top: 12px;
+    font-family: var(--mono); font-size: 13px;
+    word-break: break-all;
+    min-height: 56px;
+  }
+  .hash-bar .label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; display: block; margin-bottom: 6px; }
+  .target-line {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px dashed var(--border);
+    font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+  }
+  .difficulty-control { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+  .difficulty-control input[type=range] { flex: 1; accent-color: var(--orange); }
+
+  /* ============== CHAIN VIS ============== */
+  .chain-strip {
+    display: flex; gap: 8px;
+    overflow-x: auto;
+    padding: 16px 4px;
+    scroll-behavior: smooth;
+  }
+  .chain-block {
+    flex: 0 0 auto;
+    width: 120px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+  }
+  .chain-block:hover { border-color: var(--orange); transform: translateY(-2px); }
+  .chain-block.selected { border-color: var(--orange); background: var(--orange-glow); }
+  .chain-block.new { animation: blockSlide 0.5s ease; }
+  @keyframes blockSlide {
+    from { opacity: 0; transform: translateX(20px) scale(0.9); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  .chain-block .height { font-family: var(--mono); font-size: 11px; color: var(--orange); font-weight: 600; }
+  .chain-block .hash-short { font-family: var(--mono); font-size: 10px; color: var(--text-muted); margin-top: 6px; word-break: break-all; line-height: 1.3; }
+  .chain-block .tx-count { font-size: 10px; color: var(--text-dim); margin-top: 6px; }
+  .chain-block.genesis { background: linear-gradient(135deg, var(--surface-2), #2a1a0a); border-color: #5a3a1a; }
+
+  .chain-arrow { display: flex; align-items: center; color: var(--text-dim); font-family: var(--mono); }
+
+  /* ============== WALLET ============== */
+  .balance-big {
+    font-family: var(--mono);
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--orange);
+    letter-spacing: -0.02em;
+  }
+  .balance-big small { font-size: 16px; color: var(--text-muted); margin-left: 6px; font-weight: 500; }
+
+  .address-list { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; }
+  .address-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--mono); font-size: 12px;
+  }
+  .address-row .addr { color: var(--text); flex: 1; word-break: break-all; }
+  .address-row .bal { color: var(--orange); font-weight: 600; margin-left: 12px; }
+
+  .tx-row {
+    padding: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--mono); font-size: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .tx-row:hover { border-color: var(--orange); }
+  .tx-row .top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .tx-row .txid { color: var(--text-muted); }
+  .tx-row .amount { color: var(--orange); font-weight: 600; }
+  .tx-row .arrow { color: var(--text-dim); margin: 0 6px; }
+  .tx-row .pending { color: var(--purple); font-size: 10px; padding: 1px 6px; background: rgba(167, 139, 250, 0.12); border-radius: 4px; }
+  .tx-row .confirmed { color: var(--green); font-size: 10px; padding: 1px 6px; background: var(--green-soft); border-radius: 4px; }
+
+  .empty {
+    text-align: center;
+    padding: 32px;
+    color: var(--text-dim);
+    font-size: 13px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+  }
+
+  /* ============== BLOCK EXPLORER ============== */
+  .merkle-tree {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 16px;
+    background: var(--bg);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .merkle-row { display: flex; gap: 8px; align-items: center; }
+  .merkle-node {
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: default;
+    transition: all 0.15s ease;
+  }
+  .merkle-node.root { border-color: var(--orange); color: var(--orange); }
+  .merkle-node.tx { border-color: var(--blue); color: var(--blue); }
+  .merkle-node:hover { transform: scale(1.05); }
+  .merkle-row::before {
+    content: "↑↑";
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+  .merkle-row:first-child::before { content: ""; }
+
+  /* ============== RPC CONSOLE ============== */
+  .console {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    height: 520px;
+  }
+  .console-output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .console-line { margin-bottom: 4px; white-space: pre-wrap; word-break: break-word; }
+  .console-line.cmd { color: var(--orange-soft); }
+  .console-line.cmd::before { content: "$ "; color: var(--green); }
+  .console-line.out { color: var(--text); }
+  .console-line.err { color: var(--red); }
+  .console-line.note { color: var(--text-dim); font-style: italic; }
+  .console-input-wrap {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--code-bg);
+  }
+  .console-input-wrap .ps { color: var(--green); font-family: var(--mono); white-space: nowrap; flex-shrink: 0; font-size: 13px; }
+  .console-input-wrap input {
+    background: transparent; border: none; color: var(--orange-soft);
+    font-family: var(--mono); font-size: 13px; padding: 4px 0;
+    flex: 1; min-width: 0;
+  }
+  .console-input-wrap input:focus { box-shadow: none; }
+
+  .help-pill {
+    display: inline-block;
+    background: var(--surface-2); border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    padding: 3px 8px; margin: 2px;
+    border-radius: 4px;
+    font-family: var(--mono); font-size: 11px;
+    cursor: pointer;
+  }
+  .help-pill:hover { color: var(--orange); border-color: var(--orange); }
+
+  /* ============== TOAST ============== */
+  .toast-stack {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 100;
+  }
+  .toast {
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-left: 3px solid var(--green);
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    min-width: 240px;
+    animation: toastIn 0.3s ease;
+    box-shadow: var(--shadow-toast);
+  }
+  .toast.error { border-left-color: var(--red); }
+  .toast.info { border-left-color: var(--blue); }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+  .small { font-size: 12px; color: var(--text-muted); }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+  details { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-top: 10px; }
+  details summary { cursor: pointer; color: var(--text-muted); font-size: 12px; }
+  details[open] summary { color: var(--orange); margin-bottom: 8px; }
+
+  .tag-inline {
+    display: inline-block;
+    padding: 2px 6px; border-radius: 4px;
+    font-family: var(--mono); font-size: 10px;
+    background: var(--surface-2); color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  /* ============== TUTORIAL ============== */
+  .chapter-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 28px; }
+  .chapter-pill {
+    padding: 7px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    text-decoration: none;
+  }
+  .chapter-pill:hover { border-color: var(--orange); color: var(--orange); text-decoration: none; }
+
+  .chapter {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 18px;
+    scroll-margin-top: 120px;
+  }
+  .chapter-head { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
+  .chapter-num {
+    width: 56px; height: 56px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--orange), #c66800);
+    color: #1a0d00;
+    font-weight: 800; font-size: 20px;
+    font-family: var(--mono);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px var(--orange-glow);
+  }
+  .chapter-head h3 {
+    margin: 0;
+    font-size: 22px;
+    text-transform: none;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .chapter-body { color: var(--text-muted); font-size: 15px; line-height: 1.7; }
+  .chapter-body p { margin: 0 0 14px; }
+  .chapter-body p:last-child { margin-bottom: 0; }
+  .chapter-body strong, .chapter-body b { color: var(--text); font-weight: 600; }
+  .chapter-body code {
+    background: var(--bg); padding: 1px 6px; border-radius: 4px;
+    font-size: 13px; color: var(--orange-soft);
+    border: 1px solid var(--border);
+  }
+  .chapter-body ul, .chapter-body ol { margin: 0 0 14px; }
+  .chapter-body li { margin-bottom: 6px; }
+
+  .hash-demo {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin: 18px 0;
+  }
+  .hash-demo label { display: block; }
+  .hash-demo input { font-size: 14px; margin-bottom: 12px; font-family: var(--mono); }
+  .hash-demo .hash-output {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--orange-soft);
+    word-break: break-all;
+    line-height: 1.5;
+    min-height: 44px;
+  }
+
+  .diagram-chain {
+    display: flex; align-items: center;
+    padding: 16px 0;
+    overflow-x: auto;
+    margin: 4px 0 14px;
+  }
+  .dia-block {
+    flex: 0 0 auto;
+    min-width: 170px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .dia-block .dia-label {
+    font-size: 11px; text-transform: uppercase;
+    color: var(--orange); font-weight: 700;
+    letter-spacing: 0.06em; margin-bottom: 10px;
+  }
+  .dia-block .dia-field {
+    font-family: var(--mono);
+    font-size: 11px; color: var(--text-muted);
+    margin: 3px 0;
+  }
+  .dia-block .dia-field b { color: var(--text); font-weight: 600; }
+  .dia-arrow {
+    flex: 0 0 auto;
+    width: 36px;
+    text-align: center;
+    font-size: 22px;
+    color: var(--orange);
+    font-family: var(--mono);
+  }
+
+  .attempts {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    margin: 16px 0;
+  }
+  .attempts .att-row { display: flex; gap: 14px; padding: 4px 0; align-items: center; }
+  .attempts .att-row.fail { color: var(--text-muted); }
+  .attempts .att-row.fail .x { color: var(--red); }
+  .attempts .att-row.win {
+    color: var(--green); font-weight: 600;
+    padding-top: 10px; margin-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+  .attempts .att-row.win .x { color: var(--green); }
+  .attempts .nonce-col { color: var(--text-dim); width: 110px; flex-shrink: 0; }
+  .attempts .x { width: 14px; flex-shrink: 0; text-align: center; }
+
+  .try-it {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: var(--orange-glow);
+    border-left: 3px solid var(--orange);
+    border-radius: 8px;
+    display: flex; gap: 12px; align-items: center;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .try-it .icon { font-size: 18px; flex-shrink: 0; }
+  .try-it a { color: var(--orange); font-weight: 600; }
+
+  /* ============== COMPARISON ============== */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 4px;
+  }
+  @media (max-width: 800px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-side {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    border-top-width: 3px;
+  }
+  .compare-side.sim { border-top-color: var(--blue); }
+  .compare-side.real { border-top-color: var(--orange); }
+  .compare-side h4 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .compare-side .who {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .compare-side .compare-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+  .compare-side .compare-label.good { color: var(--green); }
+  .compare-side .compare-label.bad { color: var(--red); }
+  .compare-side ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .compare-side ul li { margin-bottom: 5px; }
+  .compare-side ul li strong { color: var(--text); font-weight: 600; }
+  .compare-side ul li code {
+    background: var(--surface-2); padding: 1px 5px; border-radius: 3px;
+    font-size: 12px; color: var(--orange-soft);
+  }
+  .compare-side .when {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    font-size: 13px;
+    color: var(--text);
+  }
+  .compare-side .when b { color: var(--orange); }
+  .compare-side.sim .when b { color: var(--blue); }
+
+  /* ============== SIM DISCLAIMER FOOTER ============== */
+  .sim-footer {
+    max-width: 1280px;
+    margin: 32px auto 0;
+    padding: 16px 24px;
+    border-top: 1px dashed var(--border);
+    font-size: 11.5px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    text-align: center;
+    font-family: var(--mono);
+  }
+  .sim-footer .label {
+    display: inline-block;
+    padding: 1px 6px; border-radius: 4px;
+    font-weight: 700; letter-spacing: 0.04em;
+    margin: 0 4px;
+  }
+  .sim-footer .label.fake { background: var(--red-soft); color: var(--red); }
+  .sim-footer .label.real { background: var(--green-soft); color: var(--green); }
+
+  /* ============== DEEP-DIVE DETAILS ============== */
+  .chapter-body details {
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 18px 0;
+  }
+  .chapter-body details summary {
+    font-size: 14px;
+    color: var(--orange);
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  .chapter-body details summary::-webkit-details-marker { display: none; }
+  .chapter-body details summary::before { content: "▸ "; color: var(--orange); display: inline-block; transition: transform 0.15s; }
+  .chapter-body details[open] summary::before { content: "▾ "; }
+  .chapter-body details[open] summary {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .chapter-body details > p,
+  .chapter-body details > ul,
+  .chapter-body details > pre,
+  .chapter-body details > table { margin: 12px 0; }
+  .chapter-body details > p:first-of-type { margin-top: 0; }
+  .chapter-body pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text);
+    overflow-x: auto;
+    line-height: 1.5;
+    margin: 14px 0;
+    white-space: pre;
+  }
+  .chapter-body details table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .chapter-body details table th,
+  .chapter-body details table td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .chapter-body details table th {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--surface-2);
+    border-bottom-color: var(--border-strong);
+  }
+  .chapter-body details table td {
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+  .chapter-body details table td:first-child {
+    color: var(--text);
+    font-weight: 600;
+    font-family: var(--sans);
+  }
+  .chapter-body details table tr:last-child td { border-bottom: none; }
+
+  /* ============== REORG DEMO ============== */
+  .chain-info {
+    display: flex; gap: 16px;
+    font-size: 12px; color: var(--text-muted);
+    margin-bottom: 12px; font-family: var(--mono);
+  }
+  .chain-info b { color: var(--orange); }
+  .chain-side h3 { display: flex; align-items: center; gap: 10px; }
+  .chain-side .winner-badge {
+    display: none;
+    padding: 2px 8px; border-radius: 4px;
+    font-family: var(--mono); font-size: 10px;
+    background: var(--green-soft); color: var(--green);
+    border: 1px solid var(--green);
+  }
+  .chain-side.winner .winner-badge { display: inline-block; }
+  .chain-side .orphan-badge {
+    display: none;
+    padding: 2px 8px; border-radius: 4px;
+    font-family: var(--mono); font-size: 10px;
+    background: var(--red-soft); color: var(--red);
+    border: 1px solid var(--red);
+  }
+  .chain-side.orphaned .orphan-badge { display: inline-block; }
+  .chain-side.winner { border-color: var(--green); }
+  .chain-side.orphaned { border-color: var(--red); opacity: 0.85; }
+
+  .chain-block.orphan {
+    background: var(--red-soft);
+    border-color: var(--red);
+    opacity: 0.55;
+    position: relative;
+  }
+  .chain-block.orphan::after {
+    content: "ORPHAN";
+    position: absolute; top: 4px; right: 4px;
+    font-size: 8px; color: var(--red);
+    font-family: var(--mono); font-weight: 700;
+  }
+  .reorg-status {
+    font-size: 14px; line-height: 1.6;
+  }
+  .reorg-status.tied { color: var(--text-muted); }
+  .reorg-status.leading { color: var(--text); }
+  .reorg-status.resolved { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">₿</div>
+  <div class="header-title">
+    <h1>Bitcoin Play</h1>
+    <div class="sub">educational simulator · everything is fake · no real coins involved</div>
+  </div>
+  <div class="header-spacer"></div>
+  <div class="stats-mini">
+    <span>height <b id="stat-height">0</b></span>
+    <span>mempool <b id="stat-mempool">0</b></span>
+    <span>balance <b id="stat-balance">0.00000000</b></span>
+  </div>
+  <button class="btn ghost" id="btn-theme" title="Toggle light/dark theme" style="padding: 6px 10px; font-size: 11px;">light</button>
+  <button class="btn ghost" id="btn-export" title="Download playground state as JSON" style="padding: 6px 10px; font-size: 11px;">↗ export</button>
+  <button class="btn ghost" id="btn-import" title="Load playground state from JSON file" style="padding: 6px 10px; font-size: 11px;">↘ import</button>
+  <input type="file" id="import-file" accept="application/json,.json" style="display:none;">
+  <button class="btn ghost" id="btn-reset" title="Reset everything (clear blocks, wallet, mempool)" style="padding: 6px 10px; font-size: 11px;">↺ reset</button>
+  <span class="badge">REGTEST</span>
+</header>
+
+<nav class="nav" id="nav">
+  <button data-section="intro" class="active"><span class="num">00</span> Intro</button>
+  <button data-section="tutorial"><span class="num">01</span> How It Works</button>
+  <button data-section="practice"><span class="num">02</span> Practice Guide</button>
+  <button data-section="setup"><span class="num">03</span> Setup Guide</button>
+  <button data-section="mining"><span class="num">04</span> Mining Lab</button>
+  <button data-section="wallet"><span class="num">05</span> Wallet &amp; Mempool</button>
+  <button data-section="explorer"><span class="num">06</span> Block Explorer</button>
+  <button data-section="reorg"><span class="num">07</span> Reorg Demo</button>
+  <button data-section="console"><span class="num">08</span> RPC Console</button>
+</nav>
+
+<main>
+
+<!-- ============== INTRO ============== -->
+<section class="section active" id="section-intro">
+  <div class="hero">
+    <h2>Run your own private Bitcoin network.</h2>
+    <p class="lede">
+      Bitcoin Core ships with three modes. <b>Mainnet</b> is real money. <b>Testnet</b> uses fake coins on a real public network with real difficulty.
+      <b>Regtest</b> is your own private chain — difficulty pinned to the floor, you're the only miner, blocks confirm instantly.
+      It's the standard environment for Bitcoin development. This page simulates it in your browser so you can see what's actually happening
+      under the hood.
+    </p>
+    <div class="actions">
+      <button class="btn primary" data-goto="tutorial">Start the tutorial →</button>
+      <button class="btn" data-goto="practice">Real-world usage</button>
+      <button class="btn" data-goto="mining">Skip to the simulator</button>
+    </div>
+    <p class="small" style="margin-top: 16px; color: var(--text-dim);">New to Bitcoin? <b>Tutorial</b> covers the concepts (10 chapters with live SHA-256 demos). <b>Practice Guide</b> covers what you'd actually do in real life (wallets, fees, security). The simulator tabs let you experiment with mining, transactions, and reorgs hands-on.</p>
+  </div>
+
+  <div class="network-grid">
+    <div class="network-card">
+      <span class="tag real">MAINNET</span>
+      <h4>Real money</h4>
+      <p>Real BTC, real difficulty, real economic stakes. ~10 min between blocks. Don't experiment here.</p>
+    </div>
+    <div class="network-card">
+      <span class="tag test">TESTNET</span>
+      <h4>Public test chain</h4>
+      <p>Fake coins, real public network, real difficulty adjustment. Useful for testing wallets against live peers.</p>
+    </div>
+    <div class="network-card active">
+      <span class="tag dev">REGTEST ← you are here</span>
+      <h4>Private development chain</h4>
+      <p>Your machine is the entire network. Mine blocks on demand. Difficulty trivial. Wipe and restart whenever.</p>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>What you'll see in this simulator</h3>
+      <ul style="color: var(--text-muted); padding-left: 20px; line-height: 1.9; font-size: 14px;">
+        <li>A real SHA-256 nonce search — watch the hash change every iteration until it falls below the difficulty target.</li>
+        <li>Block headers serialized exactly as Bitcoin Core does (version, prev hash, merkle root, timestamp, bits, nonce).</li>
+        <li>A wallet that holds spendable balance, and a mempool that fills with pending transactions.</li>
+        <li>A Merkle tree of transaction hashes, computed live as you build a block.</li>
+        <li>An RPC console that responds to actual <code>bitcoin-cli</code> commands.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What's faked</h3>
+      <ul style="color: var(--text-muted); padding-left: 20px; line-height: 1.9; font-size: 14px;">
+        <li>Addresses — generated as random bech32-looking strings, no actual keypairs or signatures.</li>
+        <li>UTXOs — the wallet tracks balances, not individual unspent outputs.</li>
+        <li>Script execution — sends always succeed if you have balance; no real script verification.</li>
+        <li>Networking — there are no peers. This page is the entire network.</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="small" style="margin-top: 14px; text-align: center; color: var(--text-muted);">
+    The hashing, header structure, merkle root, and proof-of-work check are <strong style="color: var(--green);">real</strong>. Everything else is the bare minimum scaffold to make those visible.
+  </p>
+
+  <div class="card" style="margin-top: 32px;">
+    <h3>Saving, sharing, and resetting your playground</h3>
+    <p style="color: var(--text-muted); margin: 0 0 14px;">
+      Your chain, addresses, mempool, wallet history, difficulty, and theme persist <strong>automatically</strong> in your browser's local storage. Refresh the page and everything is right where you left it — including a 1,000-block chain if you've gone deep. Three buttons in the top-right header let you go further:
+    </p>
+    <ul style="color: var(--text-muted); padding-left: 20px; line-height: 1.9; font-size: 14px; margin: 0;">
+      <li><b style="color: var(--text);">↗ export</b> — downloads a <code>bitcoin-play-state-YYYY-MM-DD.json</code> file containing your full playground state. Useful as a backup before destructive experiments, or to share an interesting scenario (a deep reorg, a chain with hundreds of blocks, a wallet with specific UTXO patterns).</li>
+      <li><b style="color: var(--text);">↘ import</b> — opens a file picker to load a previously-exported JSON. Asks for confirmation before replacing your current state. Refuses if mining is in progress.</li>
+      <li><b style="color: var(--text);">↺ reset</b> — wipes <em>everything</em> back to genesis: the main chain, the wallet, the mempool, and the Reorg Demo's Chain A / Chain B. Confirmation prompt prevents accidents.</li>
+    </ul>
+    <p class="small" style="margin: 14px 0 0; color: var(--text-dim);">
+      The exported JSON is plain text and human-readable — you can open it in any editor. Storage is per-browser-per-origin, so opening this page in a different browser or in incognito starts fresh.
+    </p>
+  </div>
+</section>
+
+<!-- ============== TUTORIAL ============== -->
+<section class="section" id="section-tutorial">
+  <h2>How Bitcoin actually works</h2>
+  <p class="lede">Eight short chapters. Each one explains one concept and points to the part of the simulator where you can see it in action. No prior knowledge assumed.</p>
+
+  <div class="chapter-pills">
+    <a href="#ch1" class="chapter-pill">01 · The problem</a>
+    <a href="#ch2" class="chapter-pill">02 · Hashes</a>
+    <a href="#ch3" class="chapter-pill">03 · Blocks &amp; the chain</a>
+    <a href="#ch4" class="chapter-pill">04 · Mining</a>
+    <a href="#ch5" class="chapter-pill">05 · Keys &amp; addresses</a>
+    <a href="#ch6" class="chapter-pill">06 · UTXOs</a>
+    <a href="#ch7" class="chapter-pill">07 · Transactions</a>
+    <a href="#ch8" class="chapter-pill">08 · Merkle trees</a>
+    <a href="#ch9" class="chapter-pill">09 · Consensus</a>
+    <a href="#ch10" class="chapter-pill">10 · Try it</a>
+  </div>
+
+  <article class="chapter" id="ch1">
+    <div class="chapter-head">
+      <span class="chapter-num">01</span>
+      <h3>Why digital money is hard</h3>
+    </div>
+    <div class="chapter-body">
+      <p>Physical money is simple. You hand a $20 bill to someone — they have it, you don't. It can't be in two places at once.</p>
+      <p>Digital money is not so simple. A "digital coin" is just a file. Files can be copied. If you send me a file representing $10, what stops you from sending the same file to a hundred other people? This is the <strong>double-spending problem</strong>, and it's why digital cash didn't really exist for decades.</p>
+      <p>The traditional fix: trust a bank. The bank keeps a single ledger. When you send money, the bank subtracts from your row and adds to the recipient's row. Everyone has to trust that the bank won't lie, freeze accounts, or go bankrupt.</p>
+      <p>Bitcoin's idea: skip the bank. Make the ledger <strong>public</strong>, copied across thousands of computers. Anyone can verify the rules were followed. The hard part: how do thousands of independent computers agree on what's true, with no central authority? That's what the rest of this tutorial is about.</p>
+    </div>
+  </article>
+
+  <article class="chapter" id="ch2">
+    <div class="chapter-head">
+      <span class="chapter-num">02</span>
+      <h3>Hashes — Bitcoin's fundamental tool</h3>
+    </div>
+    <div class="chapter-body">
+      <p>A <strong>hash function</strong> takes any input — a word, a file, a whole book — and produces a fixed-size fingerprint. Bitcoin uses SHA-256, which always outputs 256 bits (64 hex characters), no matter how big or small the input.</p>
+      <p>Three properties make hashes useful:</p>
+      <ul>
+        <li><strong>Deterministic.</strong> Same input always produces the same output.</li>
+        <li><strong>One-way.</strong> Given a hash, you cannot reverse it to find the input. The only way to find what produced a hash is to guess inputs and try them one at a time.</li>
+        <li><strong>Avalanche.</strong> Changing one bit of input completely scrambles the output. There's no "close" — every input produces a hash that looks random.</li>
+      </ul>
+      <div class="hash-demo">
+        <label>Try it — type anything, see SHA-256 update live:</label>
+        <input type="text" id="hash-input" value="Hello, Bitcoin!">
+        <div class="hash-output" id="hash-output">—</div>
+        <p class="small" style="margin: 12px 0 0;">Change a single character. The output is completely different — there's no pattern, no partial match.</p>
+      </div>
+      <p>Every other Bitcoin concept is built on this. "The hash of a block." "The hash of a transaction." "Mining is finding a hash that…" — all the same SHA-256.</p>
+    </div>
+  </article>
+
+  <article class="chapter" id="ch3">
+    <div class="chapter-head">
+      <span class="chapter-num">03</span>
+      <h3>Blocks linked by hashes</h3>
+    </div>
+    <div class="chapter-body">
+      <p>A <strong>block</strong> is a bundle of transactions plus a small header. The header has six fields, but the critical one for now is <code>previous block hash</code> — the SHA-256 hash of the block that came before.</p>
+      <div class="diagram-chain">
+        <div class="dia-block">
+          <div class="dia-label">Block #5</div>
+          <div class="dia-field">prev: <b>0000a3f0…</b></div>
+          <div class="dia-field">txs: 4</div>
+          <div class="dia-field">hash: <b>0000b2e1…</b></div>
+        </div>
+        <div class="dia-arrow">→</div>
+        <div class="dia-block">
+          <div class="dia-label">Block #6</div>
+          <div class="dia-field">prev: <b>0000b2e1…</b></div>
+          <div class="dia-field">txs: 7</div>
+          <div class="dia-field">hash: <b>0000c8d4…</b></div>
+        </div>
+        <div class="dia-arrow">→</div>
+        <div class="dia-block">
+          <div class="dia-label">Block #7</div>
+          <div class="dia-field">prev: <b>0000c8d4…</b></div>
+          <div class="dia-field">txs: 2</div>
+          <div class="dia-field">hash: <b>0000f9a2…</b></div>
+        </div>
+      </div>
+      <p>This is what makes it a "block-<i>chain</i>". Every block contains the fingerprint of the previous one. If anyone modifies a transaction in an old block, that block's hash changes, which means the next block's "previous hash" no longer matches, which breaks every block built on top.</p>
+      <p>You can't quietly change history. Any tampering propagates forward and is immediately visible to anyone with a copy of the chain.</p>
+    </div>
+  </article>
+
+  <article class="chapter" id="ch4">
+    <div class="chapter-head">
+      <span class="chapter-num">04</span>
+      <h3>Mining is a hash lottery</h3>
+    </div>
+    <div class="chapter-body">
+      <p>Hashing a block is fast. So fast that an attacker could rewrite history by quickly recomputing all the affected hashes. Bitcoin's defense: make finding a valid block hash <strong>artificially expensive</strong>.</p>
+      <p>The rule: a block is only valid if its header's hash starts with a certain number of zeros. There's no clever shortcut. You have to keep changing one field of the header — the <code>nonce</code> — and rehashing, over and over, until you get lucky:</p>
+      <div class="attempts" id="mining-example"></div>
+      <p>This is <strong>mining</strong>. Whoever finds a valid hash first gets to add the block to the chain and collect a reward (currently 3.125 BTC on mainnet, 50 BTC on regtest). The number of required zeros — the <em>difficulty</em> — adjusts automatically every 2,016 blocks so the global network produces a new block roughly every 10 minutes.</p>
+      <p>To put a number on it: <strong>as of April 2026, Bitcoin's mining difficulty is 135.59 trillion</strong> and the global network is running at about <strong>940 EH/s</strong> — 940 × 10¹⁸ SHA-256 attempts <em>every second</em>. A valid block hash needs roughly 20 leading hex zeros in front. Even with that planetary amount of hashing, it still takes ~10 minutes per block. The simulator above is dialed down by about 20 orders of magnitude so your laptop can find one in milliseconds.</p>
+
+      <details>
+        <summary>What does "difficulty 135.59 T" actually mean?</summary>
+        <p>"T" stands for trillion. So 135.59 × 10¹² ≈ 1.36 × 10¹⁴. The number is saying: <strong>finding a valid block today is 135.59 trillion times harder than it was at Bitcoin's launch in January 2009.</strong></p>
+        <p>The mechanism: every block header has a <code>bits</code> field that encodes a 256-bit number called the <strong>target</strong>. A block is only valid if its hash, interpreted as an integer, is ≤ that target. Smaller target = fewer valid hashes exist in the 256-bit space = harder to find one.</p>
+        <p><strong>Difficulty</strong> is defined as the ratio <code>difficulty_1_target ÷ current_target</code>, where <code>difficulty_1_target</code> is a <em>fixed protocol constant</em>: <code>0x00000000ffff0000…</code> (about 2²²⁴, encoded as <code>bits = 0x1d00ffff</code>). It's hardcoded into Bitcoin Core — not derived from any block. Mainnet's genesis happens to be mined at exactly this target, so genesis difficulty = 1, but that's a coincidence specific to mainnet (regtest's genesis, for example, has difficulty ~4.6 × 10⁻¹⁰).</p>
+        <table>
+          <tr><th>Era</th><th>Difficulty</th><th>Required leading zero bits</th><th>Avg attempts per block</th></tr>
+          <tr><td>Genesis (Jan 2009)</td><td>1</td><td>~32 (≈ 8 hex zeros)</td><td>~4.3 × 10⁹</td></tr>
+          <tr><td>Today (Apr 2026)</td><td>135.59 × 10¹²</td><td>~79 (≈ 20 hex zeros)</td><td>~5.8 × 10²³</td></tr>
+        </table>
+        <p>So a real mainnet block hash today looks like:</p>
+        <pre>00000000000000000001a3f7c8e2b9d4...
+└──── ~20 leading hex zeros ─────┘</pre>
+        <p>The number gets recomputed every <strong>2,016 blocks</strong> (~2 weeks). The protocol checks: "Did the last 2,016 blocks take more or less than 20,160 minutes (= 10 min × 2,016)?" If faster, difficulty goes up; slower, it goes down. Capped at 4× change per period in either direction. There's no committee, no vote — just three lines of arithmetic in <code>pow.cpp</code> of Bitcoin Core.</p>
+        <p><strong>Historical climb:</strong> 2009: 1 · 2013: 50 M · 2017: 1 T · 2021: 25 T · 2024: 80 T · <strong style="color: var(--orange);">2026: 135.59 T</strong>. Each jump tracks the global investment in faster ASIC mining chips — more hashpower joins, blocks come too fast, the next retarget tightens the target.</p>
+      </details>
+
+      <p>This is also why the chain is tamper-resistant. To rewrite block #100, an attacker doesn't just have to redo block #100's mining — they have to redo blocks #100, #101, #102, … all the way up to the current tip, <em>faster than the rest of the network produces fresh blocks</em>. That requires more hashing power than the rest of the planet combined. In practice: not affordable.</p>
+      <div class="try-it">
+        <span class="icon">⛏</span>
+        <div>See it happen live in the <a href="#" data-goto="mining">Mining Lab</a> — watch the nonce counter climb until a valid hash appears.</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="chapter" id="ch5">
+    <div class="chapter-head">
+      <span class="chapter-num">05</span>
+      <h3>Keys and addresses — how ownership actually works</h3>
+    </div>
+    <div class="chapter-body">
+      <p>Bitcoin doesn't store who owns coins. There's no "Alice owns 5 BTC" anywhere in the protocol. Instead, it stores <strong>locks</strong> — each coin output is locked to a specific cryptographic puzzle, and "ownership" simply means knowing the secret that solves the puzzle.</p>
+      <p>The puzzle is built from three layers:</p>
+      <ul>
+        <li><strong>Private key.</strong> A randomly chosen 256-bit number. That's it — just a random number. The space of possible private keys is ~10⁷⁷, which is more than the number of atoms in the visible universe. If you can pick one that nobody else has guessed, the coins locked to it are effectively yours.</li>
+        <li><strong>Public key.</strong> Derived from the private key using elliptic curve math (specifically the <code>secp256k1</code> curve). The math is <em>one-way</em>: trivial to compute public from private, computationally infeasible to reverse.</li>
+        <li><strong>Address.</strong> A hash of the public key, then encoded into a human-friendly string (<code>bech32</code> for the modern <code>bc1q…</code> / <code>bcrt1q…</code> formats). Hashing the public key is a small extra privacy step — the actual public key only gets revealed when you spend.</li>
+      </ul>
+      <details>
+        <summary>What does this look like with real numbers?</summary>
+        <p>A real Bitcoin keypair (do not use this — it's a published example):</p>
+        <pre>private key:   18e14a7b6a307f426a94f8114701e7c8e774e7f9a47e2c2035db29a206321725
+public key:    0250863ad64a87ae8a2fe83c1af1a8403cb53f53e486d8511dad8a04887e5b2352
+address:       bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4</pre>
+        <p>The private key is just 64 hex characters (256 bits). The public key is computed by elliptic-curve point multiplication: <code>pubkey = privkey × G</code> where G is a fixed "generator point" defined by secp256k1. The address is <code>bech32(ripemd160(sha256(pubkey)))</code> with a "bc1" human-readable prefix.</p>
+        <p>The simulator generates fake addresses by picking random characters from the bech32 alphabet — they look real but have no underlying key. A real address always has a valid checksum and a real key behind it.</p>
+      </details>
+      <p>Here's the part that's worth pausing on. When you "send" bitcoin, you don't tell the network "transfer X to Y." You construct a transaction and <strong>sign</strong> it with your private key. The signature is a number computed from (a) your private key and (b) the exact bytes of the transaction. Anyone can verify: "this signature could only have been produced by the private key matching this public key, for this exact transaction." The verification uses the public key — your private key never leaves your machine.</p>
+      <p>That's the magic trick: <strong>the signature proves authorization without revealing the secret.</strong> This is what "trustless" means. No bank, no notary, no custodian needs to vouch for you. The math vouches for itself. Anyone running a Bitcoin node can verify every signature in every transaction in the entire chain, without ever knowing who you are.</p>
+      <p>The flip side: if you lose your private key, the coins it locked are unrecoverable. If someone else gets it, they can spend your coins. There's no password reset. No customer service. This is the part of Bitcoin that makes self-custody both genuinely powerful and genuinely demanding — most users delegate this to a wallet app, a hardware device, or a custodial exchange that holds the keys for them.</p>
+      <div class="try-it">
+        <span class="icon">🔑</span>
+        <div>The simulator's <a href="#" data-goto="wallet">Wallet tab</a> handwaves all this — addresses are random strings with no keys, sends always succeed. In real Bitcoin, every send requires a valid signature against the UTXO being spent (next chapter).</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="chapter" id="ch6">
+    <div class="chapter-head">
+      <span class="chapter-num">06</span>
+      <h3>UTXOs — what's actually being spent</h3>
+    </div>
+    <div class="chapter-body">
+      <p>Most people picture Bitcoin like a bank account: "Alice's balance is 5 BTC." That mental model is wrong, and it's worth fixing because the actual model affects everything from fees to privacy to how you build wallet software.</p>
+      <p>Bitcoin has no concept of an account or a balance. It tracks <strong>unspent transaction outputs</strong> — UTXOs. Each UTXO is a discrete chunk of bitcoin, locked to an address (or more precisely, to a script — see chapter 5), created by some previous transaction. Your "balance" in any wallet is just the sum of UTXOs that wallet can sign for.</p>
+      <p>Picture it like cash in a wallet:</p>
+      <pre>Alice's UTXOs:
+  └─ 0.5 BTC   (received from tx abc123…, output #0)
+  └─ 1.2 BTC   (received from tx def456…, output #1)
+  └─ 0.8 BTC   (mined coinbase from block #91, output #0)
+─────────────
+  Balance: 2.5 BTC  (the wallet's UI just sums them)</pre>
+      <p>When Alice sends 1 BTC to Bob, here's what actually happens at the protocol level:</p>
+      <ol>
+        <li>The wallet picks one or more UTXOs whose total ≥ 1 BTC + fee. Say it picks the 1.2 BTC UTXO.</li>
+        <li>It builds a transaction that <strong>consumes that entire UTXO as an input</strong> (UTXOs can't be partially spent — they're consumed whole).</li>
+        <li>It creates new outputs: <b>1 BTC to Bob's address</b>, plus <b>0.198 BTC change back to Alice</b> (typically to a fresh address she controls), plus <b>0.002 BTC implicit fee</b> (the difference between input total and output total goes to whoever mines the block).</li>
+        <li>Once mined, the 1.2 BTC UTXO is gone from the global UTXO set. Two new UTXOs exist in its place: one for Bob, one for Alice.</li>
+      </ol>
+      <pre>Before:                        After:
+  Alice: 1.2 BTC UTXO     →     Bob:   1.0 BTC UTXO  (new)
+                                Alice: 0.198 BTC UTXO (change, new)
+                                Miner: 0.002 BTC fee (in their coinbase)</pre>
+      <details>
+        <summary>Why design it this way? Why not just have account balances?</summary>
+        <p><strong>No global state to mutate.</strong> Each UTXO is independently spendable. Verifying a transaction is "do these inputs exist in the UTXO set, do the signatures check out, do the output amounts add up to ≤ input amounts?" — purely local. No need to look up account balances or worry about ordering. Thousands of nodes can verify in parallel.</p>
+        <p><strong>Simpler double-spend prevention.</strong> Once a UTXO is consumed, it's removed from the set. Trying to spend it twice is detected by "that UTXO doesn't exist anymore." No need for account-level locking or sequencing.</p>
+        <p><strong>Composability.</strong> A transaction can consume 5 UTXOs and produce 3, or consume 1 and produce 100. There's no "split" or "merge" operation — just inputs and outputs. Lightning, atomic swaps, multi-party contracts — they all build on this primitive.</p>
+        <p><strong>Privacy.</strong> Each UTXO can be sent to a fresh address. There's no permanent "account" people can watch. (Imperfect — chain analysis can often link addresses — but the foundation is set up for it.)</p>
+        <p>Account-balance chains (Ethereum, most others) made the opposite tradeoff: simpler programming model, more expressive smart contracts, but global state that has to be carefully sequenced and locked.</p>
+      </details>
+      <p>So when a wallet UI shows "Balance: 2.5 BTC", it's the wallet doing arithmetic on UTXOs the user controls. Bitcoin itself doesn't know about Alice. It knows about UTXO <code>abc123:0</code> (locked to a specific hash), UTXO <code>def456:1</code> (locked to a different hash), and so on. Alice happens to have the private keys that can sign for both.</p>
+      <p>This is also why **UTXO selection is a real subfield**: which UTXOs should a wallet pick when you want to send X BTC? Smallest first (avoids leaving "dust")? Largest first (fewer inputs, smaller tx, lower fee)? Minimize change? Privacy-aware (don't combine UTXOs from different addresses, since that links them)? Every serious wallet has its own algorithm.</p>
+      <p>The simulator uses a balance model because tracking UTXOs would 5× the wallet complexity for limited educational gain at this level. But every real Bitcoin wallet, every block explorer, every Lightning node, every exchange's hot wallet — they're all built around the UTXO set.</p>
+      <div class="try-it">
+        <span class="icon">📦</span>
+        <div>On a real bitcoind, run <code>bitcoin-cli listunspent</code> to see your wallet's actual UTXO list. That's what gets selected from when you call <code>sendtoaddress</code>.</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="chapter" id="ch7">
+    <div class="chapter-head">
+      <span class="chapter-num">07</span>
+      <h3>Transactions and the mempool</h3>
+    </div>
+    <div class="chapter-body">
+      <p>A <strong>transaction</strong> moves bitcoin from one address to another. To create one, you sign it with the private key controlling the source address (proving you have the authority to spend), then broadcast it to the network.</p>
+      <p>Transactions don't immediately become part of the chain. They first sit in every node's <strong>mempool</strong> — a waiting room of unconfirmed transactions. Miners pick from the mempool when assembling the next block they're trying to mine. Higher-fee transactions get picked first, which is how fees actually work — they're the bid in an auction for limited block space.</p>
+      <p>Once a block containing your transaction is mined, your transaction has <strong>1 confirmation</strong>. As more blocks build on top, confirmations increase. The convention is to wait ~6 confirmations before treating large payments as final — chapter 9 explains why.</p>
+      <div class="try-it">
+        <span class="icon">↗</span>
+        <div>In the <a href="#" data-goto="wallet">Wallet tab</a>, send a transaction and watch it sit in the mempool until you mine a block to confirm it.</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="chapter" id="ch8">
+    <div class="chapter-head">
+      <span class="chapter-num">08</span>
+      <h3>The Merkle tree</h3>
+    </div>
+    <div class="chapter-body">
+      <p>A block can hold thousands of transactions. The header is only 80 bytes. So the header doesn't contain the transactions themselves — it contains a single 32-byte fingerprint that summarizes all of them: the <strong>merkle root</strong>.</p>
+      <p>Construction: take all the transaction IDs. Pair them up and hash each pair. Pair up those hashes and hash again. Repeat until one hash remains. That's the root.</p>
+      <div class="merkle-tree" style="margin: 16px 0;">
+        <div class="merkle-row"><div class="merkle-node root">root</div></div>
+        <div class="merkle-row"><div class="merkle-node">H(AB)</div><div class="merkle-node">H(CD)</div></div>
+        <div class="merkle-row"><div class="merkle-node tx">tx A</div><div class="merkle-node tx">tx B</div><div class="merkle-node tx">tx C</div><div class="merkle-node tx">tx D</div></div>
+      </div>
+      <p>Why this is clever: if you want to prove a specific transaction is in a block, you don't need the whole block. You just need the transaction itself plus log₂(N) hashes along the branch up to the root — a "merkle proof". That's how phone wallets verify payments without downloading the full chain.</p>
+      <div class="try-it">
+        <span class="icon">🌳</span>
+        <div>Open any non-genesis block in the <a href="#" data-goto="explorer">Block Explorer</a> to see a real merkle tree built from that block's transactions.</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="chapter" id="ch9">
+    <div class="chapter-head">
+      <span class="chapter-num">09</span>
+      <h3>Consensus — the longest chain wins</h3>
+    </div>
+    <div class="chapter-body">
+      <p>What if two miners find valid blocks at almost the same time? Half the network sees one first, half sees the other. Now there are two competing candidate "tips" — a temporary fork.</p>
+      <p>The rule: nodes always extend the chain with the most accumulated proof-of-work (in practice, usually the longer one). Whichever fork the next miner extends becomes the winner. The losing block becomes an <strong>orphan</strong> — its transactions go back to the mempool to be re-mined into a future block.</p>
+      <p>This is why we wait for confirmations. If your transaction is in a block that ends up on the losing fork, it's effectively undone. After 6 blocks, the chance of a reorg deep enough to reverse it is statistically negligible (assuming honest miners control most of the hashing power).</p>
+      <p>Add it all up: hashes link blocks, mining makes new blocks expensive to produce, the longest valid chain is the truth, and you can't quietly change the past without redoing all the work since. <strong>That's Bitcoin.</strong></p>
+      <div class="try-it">
+        <span class="icon">⚖</span>
+        <div>Drive the scenario yourself in the <a href="#" data-goto="reorg">Reorg Demo</a> — mine on two competing chains, then watch one orphan the other.</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="chapter" id="ch10">
+    <div class="chapter-head">
+      <span class="chapter-num">10</span>
+      <h3>What's next</h3>
+    </div>
+    <div class="chapter-body">
+      <p>You've got the concepts. From here, the rest of this app is hands-on. Two paths, depending on what you want:</p>
+      <div class="try-it" style="background: rgba(96, 165, 250, 0.10); border-left-color: var(--blue);">
+        <span class="icon">📘</span>
+        <div><strong style="color: var(--blue);">Want to learn what you'd actually do with Bitcoin in real life?</strong> The <a href="#" data-goto="practice">Practice Guide</a> covers wallets, seed backups, exchanges, sending payments, fee management, long-term storage — and links into the simulator at each step so you can practice the mechanic without risking real money.</div>
+      </div>
+      <div class="try-it">
+        <span class="icon">⚙</span>
+        <div><strong style="color: var(--orange);">Want to play with the protocol directly?</strong> Jump straight into the simulator tabs: <a href="#" data-goto="mining">Mining Lab</a> for live nonce search, <a href="#" data-goto="wallet">Wallet</a> for transactions and the mempool, <a href="#" data-goto="explorer">Block Explorer</a> for header / merkle / tx inspection, <a href="#" data-goto="reorg">Reorg Demo</a> for forks and the longest-chain rule, <a href="#" data-goto="console">RPC Console</a> for real <code>bitcoin-cli</code> commands. All sandboxed — you can't break anything.</div>
+      </div>
+      <p style="margin-top: 18px;">If you're curious how the simulator works under the hood, view source on this page — everything (HTML, CSS, JavaScript) lives in a single <code>index.html</code> file. The SHA-256 function, block-header serialization, merkle root computation, and proof-of-work check are faithful JavaScript implementations of the same algorithms Bitcoin Core uses in C++.</p>
+    </div>
+  </article>
+</section>
+
+<!-- ============== PRACTICE GUIDE ============== -->
+<section class="section" id="section-practice">
+  <h2>Practice Guide — using Bitcoin in the real world</h2>
+  <p class="lede">Concepts on paper are one thing; using Bitcoin is another. This is the practical playbook: what tools you need, what to actually click, what to watch out for. After each step, jump into the simulator to practice the mechanic — same buttons, no real money.</p>
+
+  <div class="chapter-pills">
+    <a href="#st1" class="chapter-pill">01 · Get a wallet</a>
+    <a href="#st2" class="chapter-pill">02 · Back up the seed</a>
+    <a href="#st3" class="chapter-pill">03 · Get some BTC</a>
+    <a href="#st4" class="chapter-pill">04 · Receive</a>
+    <a href="#st5" class="chapter-pill">05 · Send</a>
+    <a href="#st6" class="chapter-pill">06 · Track</a>
+    <a href="#st7" class="chapter-pill">07 · Fees</a>
+    <a href="#st8" class="chapter-pill">08 · Long-term</a>
+    <a href="#st9" class="chapter-pill">09 · Going further</a>
+  </div>
+
+  <article class="chapter" id="st1">
+    <div class="chapter-head">
+      <span class="chapter-num">01</span>
+      <h3>Get a wallet</h3>
+    </div>
+    <div class="chapter-body">
+      <p>A "wallet" doesn't actually hold your bitcoin — your bitcoin lives on the blockchain. The wallet holds the <strong>private keys</strong> that prove you can spend specific UTXOs (chapter 5–6 of the tutorial). It also gives you a UI to receive, send, and track payments. That's all it is: a key manager with friendly buttons.</p>
+      <p>Categories, ranked roughly from easiest to most secure:</p>
+      <ul>
+        <li><strong>Custodial apps</strong> — Cash App, Strike, Coinbase, Wallet of Satoshi. Easy onboarding, but the company holds your keys. They can freeze, lose, or seize the funds. Fine for spending money, not for savings. <em>"Not your keys, not your coins."</em></li>
+        <li><strong>Mobile non-custodial wallets</strong> — Phoenix, Muun, BlueWallet, Sparrow Mobile. You hold the keys (in your phone's secure storage). Good for small amounts and daily use.</li>
+        <li><strong>Desktop wallets</strong> — Sparrow, Electrum, Bitcoin Core's built-in wallet. More features (PSBT signing, coin control, hardware integration) but tied to one machine.</li>
+        <li><strong>Hardware wallets</strong> — Coldcard, BitBox, Ledger, Trezor. The private key is generated and stored on a dedicated chip, never touches an internet-connected device. Gold standard for serious holdings.</li>
+      </ul>
+      <p><strong>Recommendation for starting out:</strong> a non-custodial mobile wallet for amounts under a few hundred dollars, a hardware wallet for anything more. Avoid custodial-only setups long-term — the whole point of Bitcoin is self-custody.</p>
+      <div class="try-it">
+        <span class="icon">💼</span>
+        <div>In the simulator, addresses are managed for you in the <a href="#" data-goto="wallet">Wallet tab</a> (it's a simulated non-custodial wallet — no signing, but the receive/send flow is the same).</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="chapter" id="st2">
+    <div class="chapter-head">
+      <span class="chapter-num">02</span>
+      <h3>Back up your seed phrase</h3>
+    </div>
+    <div class="chapter-body">
+      <p>When you create a non-custodial wallet, it generates a <strong>seed phrase</strong>: 12 or 24 English words. This phrase deterministically derives every private key the wallet will ever produce (BIP39 + BIP32). Whoever has the seed has the money. Period.</p>
+      <p>Rules — these are not negotiable:</p>
+      <ul>
+        <li><strong>Write it down on paper.</strong> Or punch it into stainless steel (Cryptosteel, Steelwallet) for fire/flood protection. Never store it digitally — no photos, no cloud notes, no password manager, no email to yourself.</li>
+        <li><strong>Never share it with anyone.</strong> No "support agent" will ever legitimately ask for it. If someone does, it's a scam. Always.</li>
+        <li><strong>Store it somewhere safe and findable.</strong> Lost paper = lost coins. Heir-readable copies in a fireproof safe is the typical setup.</li>
+        <li><strong>Test recovery before you deposit serious money.</strong> Wipe the wallet, restore from the seed, confirm the same addresses appear. If recovery fails, find out now, not when you've already loaded $50k onto it.</li>
+      </ul>
+      <p>This is the single most common way people lose Bitcoin: bad seed backup. Not hacking, not mining attacks — just losing the paper or never writing it down. The protocol is mathematically secure; the human side is not.</p>
+      <div class="try-it">
+        <span class="icon">📝</span>
+        <div>The simulator's wallet doesn't have a seed (no real keys), but real wallets do. Practice the discipline before you have to: write 12 random words on paper today, type them back tomorrow, see how easy it is to fumble.</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="chapter" id="st3">
+    <div class="chapter-head">
+      <span class="chapter-num">03</span>
+      <h3>Acquire your first sats</h3>
+    </div>
+    <div class="chapter-body">
+      <p>One bitcoin (BTC) is divisible into 100 million <strong>satoshis</strong> ("sats"). You don't need to buy a whole BTC; you can buy $5 worth.</p>
+      <p>Three main acquisition paths:</p>
+      <ul>
+        <li><strong>Bitcoin-only exchange.</strong> River, Strike, Swan, Bull Bitcoin. Verify your identity (KYC), link a bank account, buy. Withdraw to your wallet. Bitcoin-only services tend to be more reputable than altcoin-heavy ones.</li>
+        <li><strong>Multi-coin exchange.</strong> Kraken, Coinbase, Gemini. Same flow, but they list dozens of coins. Functional, mainstream, also KYC.</li>
+        <li><strong>Peer-to-peer (P2P).</strong> Bisq, Robosats, Hodl Hodl, Peach. No KYC, more privacy, more friction. You match with another individual; trades are escrowed in a multisig contract until both sides confirm. Slower, but no exchange holds your coins or your data.</li>
+      </ul>
+      <p><strong>The critical step everyone skips:</strong> after buying, <em>withdraw to your own wallet</em>. Bitcoin sitting on an exchange is not yours — it's an IOU from the exchange. Exchanges go bust regularly (Mt. Gox, FTX, Celsius, BlockFi). The first thing to do after buying is move it to an address whose private key you control.</p>
+      <div class="try-it">
+        <span class="icon">🪙</span>
+        <div>In the simulator, "buying" is replaced by mining — open the <a href="#" data-goto="mining">Mining Lab</a> and click <b>Mine 101 blocks</b> to give your wallet 50 BTC of mature spendable balance.</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="chapter" id="st4">
+    <div class="chapter-head">
+      <span class="chapter-num">04</span>
+      <h3>Receive a payment</h3>
+    </div>
+    <div class="chapter-body">
+      <p>To receive bitcoin, you give the sender an <strong>address</strong>. Most wallets generate a fresh address every time you tap "Receive" — this is for privacy. (If you reuse one address, anyone watching the chain can see your full payment history at that address.)</p>
+      <p>The flow:</p>
+      <ol>
+        <li>Open your wallet, tap <b>Receive</b>.</li>
+        <li>The wallet displays a <code>bc1q…</code> address and a QR code (and optionally a Lightning invoice).</li>
+        <li>Send the address/QR to the payer (text, email, NFC, scan).</li>
+        <li>The payer broadcasts a transaction paying that address.</li>
+        <li>Within seconds, your wallet shows it as <strong>unconfirmed</strong> (it's in the mempool).</li>
+        <li>After 1–6 blocks (~10–60 minutes), the payment is confirmed.</li>
+      </ol>
+      <p>For small amounts, 1 confirmation is fine. For large amounts (tens of thousands of dollars), wait for 3–6. For payments where you're handing over an irreversible good (real estate, a car), wait longer.</p>
+      <div class="try-it">
+        <span class="icon">⬇</span>
+        <div>Practice in the <a href="#" data-goto="wallet">Wallet tab</a>: click <b>+ getnewaddress</b> to generate one, then send to it from another address (or use the dropdown on the Send form). Mine a block to confirm.</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="chapter" id="st5">
+    <div class="chapter-head">
+      <span class="chapter-num">05</span>
+      <h3>Send a payment</h3>
+    </div>
+    <div class="chapter-body">
+      <p>Sending is the inverse:</p>
+      <ol>
+        <li>Tap <b>Send</b>. Paste the recipient's address (or scan their QR).</li>
+        <li>Enter the amount (in BTC or sats).</li>
+        <li>Choose a fee — most wallets show "fast / medium / slow" estimates based on current mempool conditions (next block / ~30 min / ~1 hour). High fee = next block; low fee = could wait a long time if mempool is congested.</li>
+        <li>Review and confirm. The wallet selects which UTXOs to consume, builds the transaction, signs it with your private key, and broadcasts it to the network.</li>
+        <li>It appears in mempool within seconds, in a block within minutes (assuming a reasonable fee).</li>
+      </ol>
+      <p><strong>Triple-check the address before confirming.</strong> Bitcoin addresses are not human-readable. A typo sends your money to nowhere — there's no recall, no chargeback, no dispute. Sophisticated malware is known to swap copy-pasted addresses with attacker addresses (called "clipboard hijacking"); checking the first/last few characters before sending is good practice.</p>
+      <div class="try-it">
+        <span class="icon">⬆</span>
+        <div>Practice in the <a href="#" data-goto="wallet">Wallet tab</a>'s Send form. Pick a "from" and "to" address, set an amount, click Send. Watch it land in the mempool, then mine a block to confirm.</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="chapter" id="st6">
+    <div class="chapter-head">
+      <span class="chapter-num">06</span>
+      <h3>Track your transaction</h3>
+    </div>
+    <div class="chapter-body">
+      <p>Every Bitcoin transaction is public. You can look up any transaction or any address on a <strong>block explorer</strong> — a website that indexes the blockchain.</p>
+      <ul>
+        <li><strong>mempool.space</strong> — the most useful explorer for active payments. Shows your tx's mempool position, current fee market, expected confirmation time, RBF status.</li>
+        <li><strong>blockstream.info</strong> — clean explorer, also has a Tor onion service for privacy.</li>
+        <li><strong>Your own node</strong> — most private option (no third party sees what you're querying). See the Setup Guide.</li>
+      </ul>
+      <p>You can search by:</p>
+      <ul>
+        <li><strong>Transaction ID (txid)</strong> — a 64-char hex string. The wallet that sent or received gives you this.</li>
+        <li><strong>Address</strong> — see all txs paid to or from that address.</li>
+        <li><strong>Block hash or height</strong> — see what's inside a specific block.</li>
+      </ul>
+      <div class="try-it">
+        <span class="icon">🔎</span>
+        <div>Practice in the <a href="#" data-goto="explorer">Block Explorer</a> tab — click any block to see its full structure (header, merkle root, transactions). The same information mempool.space shows for real Bitcoin.</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="chapter" id="st7">
+    <div class="chapter-head">
+      <span class="chapter-num">07</span>
+      <h3>Manage fees and stuck transactions</h3>
+    </div>
+    <div class="chapter-body">
+      <p>Bitcoin fees are paid in sats per virtual byte (sat/vB). Block space is finite (~1 MB / 4 MWU per block, every ~10 min); when more transactions want in than space allows, it's an auction. Your fee is your bid.</p>
+      <p>Typical mempool conditions:</p>
+      <ul>
+        <li><strong>Quiet</strong> (1–5 sat/vB) — almost everything confirms in the next block. Most weekends.</li>
+        <li><strong>Normal</strong> (10–30 sat/vB) — confirms in 1–3 blocks.</li>
+        <li><strong>Congested</strong> (50–500+ sat/vB) — bid wars during ordinals/inscriptions hype, ETF launches, big macro events. Low-fee txs can wait days.</li>
+      </ul>
+      <p>If your transaction is stuck (low fee, mempool got congested after you broadcast):</p>
+      <ul>
+        <li><strong>RBF (Replace-By-Fee, BIP125)</strong> — if your wallet enabled RBF when sending, you can rebroadcast the same tx with a higher fee. Only the sender can do this.</li>
+        <li><strong>CPFP (Child-Pays-For-Parent)</strong> — the recipient creates a new transaction spending the unconfirmed output, with a fee high enough to make miners include both. Useful when RBF wasn't enabled.</li>
+      </ul>
+      <p>Modern wallets handle RBF automatically. mempool.space has a "fee bump" estimator.</p>
+    </div>
+  </article>
+
+  <article class="chapter" id="st8">
+    <div class="chapter-head">
+      <span class="chapter-num">08</span>
+      <h3>Long-term storage</h3>
+    </div>
+    <div class="chapter-body">
+      <p>For amounts you don't move often, take security up a notch:</p>
+      <ul>
+        <li><strong>Hardware wallet (single-sig).</strong> Coldcard, BitBox, Trezor, Ledger. Private key generated and stored offline. Transactions are signed on the device — your computer never sees the key. Plug in only to sign; otherwise it sits in a drawer. Good baseline for $1k–$100k.</li>
+        <li><strong>Multisig (2-of-3 or 3-of-5).</strong> Requires multiple devices/keys to sign. Lose one key → still recoverable. Compromise one device → funds still safe. Used for serious holdings, family inheritance setups, treasury management. Tools: Sparrow, Specter, Nunchuk, Casa, Unchained.</li>
+        <li><strong>Air-gapped setups.</strong> Sign transactions on a device that has never connected to the internet. Coordinate via QR codes or microSD cards. Maximum paranoia mode.</li>
+      </ul>
+      <p>The general principle: <strong>cold storage</strong> means private keys never touch an internet-connected device. The more you have, the colder it should be.</p>
+    </div>
+  </article>
+
+  <article class="chapter" id="st9">
+    <div class="chapter-head">
+      <span class="chapter-num">09</span>
+      <h3>Going further</h3>
+    </div>
+    <div class="chapter-body">
+      <p>Once the basics are routine, here's what's worth exploring next:</p>
+      <ul>
+        <li><strong>Run your own node.</strong> Don't trust anyone's blockchain data — verify it yourself. Bitcoin Core, Umbrel, Start9, MyNode, Raspiblitz make this approachable on a Raspberry Pi or old laptop. See the <a href="#" data-goto="setup">Setup Guide</a> for the development version (regtest); same software, different network flag for mainnet.</li>
+        <li><strong>Lightning Network.</strong> Bitcoin's layer-2 for instant, cheap (sub-cent) payments. Open a payment channel, transact off-chain at unlimited speed, settle on-chain when you close. Phoenix and Muun are the easiest mobile entry points; LND, CLN, and Eclair are the serious node implementations.</li>
+        <li><strong>Privacy tools.</strong> CoinJoin (JoinMarket, Whirlpool, Wabisabi) breaks transaction graph analysis. Lightning + Tor for payment privacy. Coin control in your wallet to avoid linking UTXOs.</li>
+        <li><strong>Build something.</strong> PSBT-based workflows, descriptor wallets, miniscript contracts, BTCPay Server for accepting payments, Lightning APIs for in-app payments. The <a href="#" data-goto="setup">Setup Guide</a> + the <a href="#" data-goto="console">RPC Console</a> are your starting points for development.</li>
+        <li><strong>Read the source.</strong> Bitcoin Core is ~150k lines of well-documented C++ at <a href="https://github.com/bitcoin/bitcoin" target="_blank" rel="noopener">github.com/bitcoin/bitcoin</a>. The consensus rules in <code>validation.cpp</code> and <code>script/interpreter.cpp</code> are the actual rules of the network. Surprisingly readable.</li>
+      </ul>
+      <p>Bitcoin is a deep rabbit hole. The basics fit in this guide; the rest is decades of work — cryptography, distributed systems, monetary theory, game theory, hardware engineering. Pick a thread that interests you and pull.</p>
+    </div>
+  </article>
+</section>
+
+<!-- ============== SETUP ============== -->
+<section class="section" id="section-setup">
+  <h2>Setup guide</h2>
+  <p class="lede">For when you want to do this for real on your own machine. The simulator runs without any of this — but the mechanics are identical.</p>
+
+  <div class="card" style="margin-bottom: 22px;">
+    <h3>Simulator vs. real regtest — when to use which</h3>
+    <p style="color: var(--text-muted); margin: 0 0 18px;">
+      The web app you're using right now teaches the <em>mechanics</em>. Real Bitcoin Core in regtest mode lets you build software against the actual protocol. Different goals — pick based on what you want to do next.
+    </p>
+    <div class="compare-grid">
+      <div class="compare-side sim">
+        <h4>This web app</h4>
+        <div class="who">simulator · runs in your browser · no install</div>
+        <div class="compare-label good">✓ Good for understanding</div>
+        <ul>
+          <li>What gets hashed (real SHA-256 of real 80-byte headers)</li>
+          <li>How the nonce search works, visually, in real time</li>
+          <li>How blocks chain via prev-hash</li>
+          <li>How merkle roots are built from transactions</li>
+          <li>The mempool → confirmation flow</li>
+          <li>Trying basic <code>bitcoin-cli</code> command syntax</li>
+        </ul>
+        <div class="compare-label bad">✗ What's faked or missing</div>
+        <ul>
+          <li>No real keys or signatures — addresses are random <code>bcrt1q…</code> strings</li>
+          <li>No UTXOs — wallet uses a balance model</li>
+          <li>No Bitcoin Script execution (no <code>OP_CHECKSIG</code>, no multisig, no timelocks)</li>
+          <li>No peer networking — there's only one "node" (this page)</li>
+          <li>No real consensus rule enforcement — sends always succeed if you have balance</li>
+        </ul>
+        <div class="when"><b>Use when:</b> you want to learn how Bitcoin works as a system, without installing anything.</div>
+      </div>
+
+      <div class="compare-side real">
+        <h4>Real regtest (bitcoind)</h4>
+        <div class="who">actual Bitcoin Core C++ · runs locally · sandboxed chain</div>
+        <div class="compare-label good">✓ Good for building</div>
+        <ul>
+          <li><strong>Real keys, signatures, UTXOs, scripts.</strong> Sign actual transactions, run real ECDSA &amp; Schnorr verification, work with the UTXO model the way real Bitcoin does.</li>
+          <li><strong>Smart contracts.</strong> Multisig, timelocks (<code>OP_CSV</code>, <code>OP_CLTV</code>), hashlocks, taproot, miniscript.</li>
+          <li><strong>RPC over HTTP.</strong> Connect any tool — <code>python-bitcoinrpc</code>, <code>bitcoinjs-lib</code>, <code>btcd</code>, your own scripts — to <code>localhost:18443</code>.</li>
+          <li><strong>Multi-node networking.</strong> Run two daemons on different ports, connect them, watch the peer protocol gossip blocks. Trigger an actual chain reorg.</li>
+          <li><strong>Exact consensus errors.</strong> <code>submitblock</code> a malformed block and Core gives you the precise rejection reason — the cleanest documentation of consensus rules anywhere.</li>
+          <li><strong>Lightning, PSBT, descriptor wallets, RBF, package relay</strong> — the full Bitcoin developer surface.</li>
+        </ul>
+        <div class="compare-label bad">✗ Requires</div>
+        <ul>
+          <li>Installing Bitcoin Core (~600 MB)</li>
+          <li>A small <code>bitcoin.conf</code> file</li>
+          <li>Running a daemon process in the background</li>
+        </ul>
+        <div class="when"><b>Use when:</b> you want to write or test software that will eventually run against real Bitcoin.</div>
+      </div>
+    </div>
+    <p style="color: var(--text-dim); font-size: 13px; margin: 18px 0 0; line-height: 1.6;">
+      The natural path: get comfortable with the concepts here, then if you're going further, follow the steps below to set up the real thing. <strong style="color: var(--text);">Anything you build against real regtest works identically on mainnet</strong> — same C++, same consensus rules, just a different chain ID and a difficulty floor. That's the whole point of regtest.
+    </p>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Step 1 · Install Bitcoin Core</h3>
+      <p class="small">Get it from <a href="https://bitcoincore.org/" target="_blank" rel="noopener">bitcoincore.org</a>. Verify signatures if you care. On Debian/Ubuntu:</p>
+      <div class="terminal">
+<span class="prompt">$</span> <span class="cmd">sudo apt install bitcoind</span>
+      </div>
+      <p class="small" style="margin-top: 10px;">You only need <code>bitcoind</code> (daemon) and <code>bitcoin-cli</code> (RPC client). The <code>bitcoin-qt</code> GUI is optional and not useful for regtest.</p>
+    </div>
+
+    <div class="card">
+      <h3>Step 2 · Config file</h3>
+      <p class="small">Create <code>~/.bitcoin/bitcoin.conf</code> (Linux/Mac) or <code>%APPDATA%\Bitcoin\bitcoin.conf</code> (Windows):</p>
+      <div class="terminal" data-copyable>
+        <button class="copy-btn" onclick="copyText(this)">copy</button>
+<span class="out">regtest=1
+server=1
+rpcuser=test
+rpcpassword=test
+fallbackfee=0.0002
+
+[regtest]
+rpcport=18443</span>
+      </div>
+      <p class="small" style="margin-top: 10px;"><code>fallbackfee</code> is needed because regtest has no fee market and the wallet would otherwise refuse to send. Credentials are local-only so <code>test/test</code> is fine.</p>
+    </div>
+
+    <div class="card">
+      <h3>Step 3 · Start the daemon</h3>
+      <div class="terminal">
+<span class="prompt">$</span> <span class="cmd">bitcoind -regtest -daemon</span>
+<span class="out">Bitcoin Core starting</span>
+      </div>
+      <p class="small" style="margin-top: 10px;">Logs go to <code>~/.bitcoin/regtest/debug.log</code> if you want to watch.</p>
+    </div>
+
+    <div class="card">
+      <h3>Step 4 · Wallet & address</h3>
+      <div class="terminal">
+<span class="prompt">$</span> <span class="cmd">bitcoin-cli -regtest createwallet "playground"</span>
+<span class="prompt">$</span> <span class="cmd">ADDR=$(bitcoin-cli -regtest getnewaddress)</span>
+<span class="prompt">$</span> <span class="cmd">echo $ADDR</span>
+<span class="out">bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080</span>
+      </div>
+      <p class="small" style="margin-top: 10px;">The <code>bcrt1q…</code> prefix is regtest's equivalent of <code>bc1</code> on mainnet.</p>
+    </div>
+
+    <div class="card">
+      <h3>Step 5 · Mine your first 101 blocks</h3>
+      <div class="terminal">
+<span class="prompt">$</span> <span class="cmd">bitcoin-cli -regtest generatetoaddress 101 $ADDR</span>
+<span class="prompt">$</span> <span class="cmd">bitcoin-cli -regtest getbalance</span>
+<span class="out">50.00000000</span>
+      </div>
+      <p class="small" style="margin-top: 10px;"><b>Why 101?</b> Coinbase rewards need 100 confirmations to mature. 101 blocks = exactly one spendable reward (block 1's coinbase, with 100 blocks built on top). Subsidy starts at 50 BTC, same schedule as mainnet.</p>
+    </div>
+
+    <div class="card">
+      <h3>Cleanup</h3>
+      <div class="terminal">
+<span class="prompt">$</span> <span class="cmd">bitcoin-cli -regtest stop</span>
+<span class="comment"># wipe and restart fresh:</span>
+<span class="prompt">$</span> <span class="cmd">rm -rf ~/.bitcoin/regtest</span>
+      </div>
+      <p class="small" style="margin-top: 10px;">Regtest is sandboxed. The data directory is self-contained. Coins can't leave regtest. The chain doesn't connect to external peers by default.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 20px;">
+    <h3>Why this is the right environment for learning</h3>
+    <p style="color: var(--text-muted); margin: 0;">
+      You can break things on purpose without consequences. Submit a block with a bad merkle root and read the exact consensus error.
+      Reorg the chain by spinning up two nodes and seeing the shorter one orphaned. Build a block by hand from <code>getblocktemplate</code>
+      and watch <code>submitblock</code> accept it. None of this is possible on mainnet because the lottery framing ($) gets in the way of the mechanics.
+      Regtest strips it back to: <i>here is what the protocol actually does.</i>
+    </p>
+  </div>
+</section>
+
+<!-- ============== MINING LAB ============== -->
+<section class="section" id="section-mining">
+  <h2>Mining Lab</h2>
+  <p class="lede">A miner repeatedly hashes the 80-byte block header, incrementing the nonce each time, until the resulting hash is below the difficulty target. Watch it happen.</p>
+
+  <div class="mining-rig" id="rig">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 12px; margin-bottom: 6px;">
+      <h3 style="margin: 0;" id="candidate-title">Candidate block #1</h3>
+      <span style="color: var(--text-dim); font-size: 12px; font-family: var(--mono);">getblocktemplate output — the 80 bytes that will be hashed</span>
+    </div>
+    <p class="small" id="candidate-summary" style="margin: 0 0 14px;">—</p>
+    <dl class="header-fields">
+      <dt>version</dt><dd id="hf-version">0x20000000</dd>
+      <dt>prev block hash</dt><dd id="hf-prev" class="hash"></dd>
+      <dt>merkle root</dt><dd id="hf-merkle" class="hash"></dd>
+      <dt>timestamp</dt><dd id="hf-time"></dd>
+      <dt>bits (target)</dt><dd id="hf-bits"></dd>
+      <dt>nonce</dt><dd id="hf-nonce" class="live">0 (not mined yet)</dd>
+    </dl>
+
+    <div class="nonce-display">
+      <div>
+        <div class="label">Current nonce</div>
+        <div class="value" id="mining-nonce">0</div>
+      </div>
+      <div style="flex: 1;">
+        <div class="label">Hashes attempted</div>
+        <div class="value" id="mining-attempts">0</div>
+      </div>
+      <div>
+        <div class="label">Hash rate</div>
+        <div class="value" id="mining-rate" style="font-size: 16px;">0 H/s</div>
+      </div>
+    </div>
+
+    <div class="hash-bar">
+      <span class="label">SHA256(SHA256(header)) — displayed reversed, as Bitcoin does</span>
+      <div id="mining-hash" class="hash">—</div>
+      <div class="target-line">
+        <span>target: hash must start with <b id="target-display">0000</b></span>
+        <span id="mining-status">idle</span>
+      </div>
+    </div>
+
+    <div class="difficulty-control">
+      <label style="margin: 0; min-width: 90px;">Difficulty</label>
+      <input type="range" id="difficulty" min="2" max="6" value="4" step="1">
+      <span class="mono" id="difficulty-label" style="min-width: 90px; text-align: right; color: var(--text-muted); font-size: 12px;">4 zeros</span>
+    </div>
+
+    <div class="row" style="margin-top: 18px;">
+      <button class="btn primary" id="btn-mine-1">⛏ Mine this block</button>
+      <button class="btn" id="btn-mine-10">Mine 10 blocks</button>
+      <button class="btn" id="btn-mine-101">Mine 101 (mature first reward)</button>
+      <button class="btn" id="btn-refresh-template">↻ Refresh template</button>
+      <button class="btn ghost" id="btn-stop" disabled>Stop</button>
+    </div>
+    <p class="small" style="margin-top: 14px;">
+      The candidate block above is built <em>before</em> mining starts: prev hash from the current chain tip, coinbase tx paying the reward to your address, merkle root from the coinbase plus any mempool transactions, and a timestamp.
+      Mining is then purely the nonce search — every other field stays fixed. Once a valid hash is found, the block is appended to the chain and a fresh candidate (#N+2) is prepared.
+    </p>
+    <p class="small" style="margin-top: 8px; padding: 10px 14px; background: var(--bg); border-left: 3px solid var(--orange); border-radius: 6px;">
+      <strong style="color: var(--orange);">For scale</strong> — Bitcoin mainnet right now (April 2026): difficulty <b>135.59 T</b>, network hashrate <b>~940 EH/s</b>, average block interval <b>~9 min 35 s</b>. A valid mainnet block hash needs roughly <b>20 leading hex zeros</b>. This simulator with 4 leading zeros is about 10²⁰ times easier — that's why your laptop finds blocks instantly here.
+    </p>
+  </div>
+
+  <div class="card" style="margin-top: 20px;">
+    <h3>Chain</h3>
+    <div class="chain-strip" id="chain-strip"></div>
+  </div>
+</section>
+
+<!-- ============== WALLET ============== -->
+<section class="section" id="section-wallet">
+  <h2>Wallet &amp; Mempool</h2>
+  <p class="lede">Send transactions between addresses. Watch them land in the mempool, then mine a block to confirm them. This mirrors how <code>sendtoaddress</code> + <code>generatetoaddress</code> work in real bitcoind.</p>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Wallet balance</h3>
+      <div class="balance-big" id="wallet-balance">0.00000000<small>BTC</small></div>
+      <p class="small" id="wallet-pending" style="margin: 6px 0 16px;">No pending balance.</p>
+      <div class="row">
+        <button class="btn primary" id="btn-new-address">+ getnewaddress</button>
+        <button class="btn" id="btn-mine-block">⛏ Mine 1 block to my address</button>
+      </div>
+      <h3 style="margin-top: 24px;">Addresses</h3>
+      <div class="address-list" id="address-list"></div>
+    </div>
+
+    <div class="card">
+      <h3>Send transaction</h3>
+      <div class="form-row">
+        <label>From address</label>
+        <select id="send-from"></select>
+      </div>
+      <div class="form-row">
+        <label>To address</label>
+        <select id="send-to"></select>
+      </div>
+      <div class="form-row">
+        <label>Amount (BTC)</label>
+        <input type="text" id="send-amount" placeholder="1.5" value="1.5">
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btn-send">→ sendtoaddress</button>
+        <button class="btn" id="btn-self-send">Send to myself</button>
+      </div>
+      <p class="small" style="margin-top: 12px;">A 0.0002 BTC fee is deducted. Tx is signed locally and broadcast — but here, "broadcast" just means it lands in our local mempool, since we're the only node.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 16px;">
+    <h3>Mempool · <span id="mempool-count" style="color: var(--text); font-weight: 400; text-transform: none; letter-spacing: 0;">0 unconfirmed</span></h3>
+    <div id="mempool-list"></div>
+  </div>
+
+  <div class="card" style="margin-top: 16px;">
+    <h3>Recent wallet transactions</h3>
+    <div id="wallet-tx-list"></div>
+  </div>
+</section>
+
+<!-- ============== EXPLORER ============== -->
+<section class="section" id="section-explorer">
+  <h2>Block Explorer</h2>
+  <p class="lede">Click any block to see its full structure — the same data <code>getblock &lt;hash&gt; 2</code> would return.</p>
+
+  <div class="card">
+    <h3>Chain</h3>
+    <div class="chain-strip" id="explorer-strip"></div>
+  </div>
+
+  <div class="grid grid-2" style="margin-top: 16px;">
+    <div class="card">
+      <h3>Block header</h3>
+      <dl class="key-value" id="block-header">
+        <dt>—</dt><dd>select a block</dd>
+      </dl>
+      <details>
+        <summary>Raw serialized header (160 hex chars = 80 bytes)</summary>
+        <div id="block-raw" class="hash" style="margin-top: 8px;">—</div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3>Merkle tree</h3>
+      <div id="block-merkle"><div class="empty">select a block</div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 16px;">
+    <h3>Transactions in this block</h3>
+    <div id="block-txs"><div class="empty">select a block</div></div>
+  </div>
+</section>
+
+<!-- ============== REORG DEMO ============== -->
+<section class="section" id="section-reorg">
+  <h2>Reorg Demo — what "longest chain wins" actually looks like</h2>
+  <p class="lede">Two miners somewhere in the world find blocks at almost the same time. The network has two competing tips. Whichever fork extends first becomes canonical; the other's blocks are orphaned and their transactions return to the mempool. Drive that scenario yourself.</p>
+
+  <div class="card">
+    <h3>How this demo works</h3>
+    <p style="color: var(--text-muted); margin: 0;">
+      Sandboxed — the main simulator's chain is untouched. Both Chain A and Chain B branch off a shared <strong>split point</strong> (think: the last block everyone agreed on before the network temporarily forked). Mine on either chain to extend it. When one becomes longer, click <b>Resolve fork</b> to apply Bitcoin's longest-chain rule: the longer side becomes the canonical chain, the shorter side's blocks become orphans.
+    </p>
+  </div>
+
+  <div class="grid grid-2" style="margin-top: 16px;">
+    <div class="card chain-side" id="chain-a-card">
+      <h3>Chain A <span class="winner-badge">WINNER</span><span class="orphan-badge">ORPHANED</span></h3>
+      <div class="chain-info">
+        <span>height after split: <b id="chain-a-height">0</b></span>
+        <span>tip: <span class="mono" id="chain-a-tip">(split point)</span></span>
+      </div>
+      <button class="btn primary" id="btn-mine-a">⛏ Mine on Chain A</button>
+      <div class="chain-strip" id="chain-a-strip" style="margin-top: 14px;"></div>
+    </div>
+    <div class="card chain-side" id="chain-b-card">
+      <h3>Chain B <span class="winner-badge">WINNER</span><span class="orphan-badge">ORPHANED</span></h3>
+      <div class="chain-info">
+        <span>height after split: <b id="chain-b-height">0</b></span>
+        <span>tip: <span class="mono" id="chain-b-tip">(split point)</span></span>
+      </div>
+      <button class="btn primary" id="btn-mine-b">⛏ Mine on Chain B</button>
+      <div class="chain-strip" id="chain-b-strip" style="margin-top: 14px;"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 16px;">
+    <h3>Status</h3>
+    <div id="reorg-status" class="reorg-status tied">No blocks mined yet — click "Mine on Chain A" or "Mine on Chain B" to start the competition.</div>
+    <div class="row" style="margin-top: 16px;">
+      <button class="btn primary" id="btn-resolve">⚖ Resolve fork (apply longest-chain rule)</button>
+      <button class="btn ghost" id="btn-reorg-reset">↺ Reset demo</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 16px;">
+    <h3>What just happened?</h3>
+    <p style="color: var(--text-muted); margin: 0;">
+      In real Bitcoin, the network doesn't have a "Resolve" button — every node independently follows the longest valid chain it sees. When two valid chains exist, nodes provisionally accept whichever they saw first, but the moment they see a longer one, they switch. This is why <b>confirmations matter</b>: a transaction in a 1-block-deep block can be reversed if a competing 2-block fork shows up. By 6 confirmations, the chance of a deep enough reorg to reverse it is negligible (assuming honest majority hashpower).
+    </p>
+    <p style="color: var(--text-muted); margin: 12px 0 0;">
+      The orphaned chain isn't lost forever — its transactions go back to the mempool to be re-mined into future blocks. The miners who found those orphan blocks lose their coinbase reward (it was never canonical). That's the cost of mining on the wrong fork.
+    </p>
+  </div>
+</section>
+
+<!-- ============== CONSOLE ============== -->
+<section class="section" id="section-console">
+  <h2>RPC Console</h2>
+  <p class="lede">Type <code>bitcoin-cli</code> commands. The simulator responds with realistic JSON, computed against the same chain state you see in the other tabs.</p>
+
+  <div class="row" style="margin-bottom: 12px;">
+    <span class="small">Try:</span>
+    <span class="help-pill" data-cmd="getblockchaininfo">getblockchaininfo</span>
+    <span class="help-pill" data-cmd="getblockcount">getblockcount</span>
+    <span class="help-pill" data-cmd="getbalance">getbalance</span>
+    <span class="help-pill" data-cmd="getnewaddress">getnewaddress</span>
+    <span class="help-pill" data-cmd="getrawmempool">getrawmempool</span>
+    <span class="help-pill" data-cmd="getblockhash 0">getblockhash 0</span>
+    <span class="help-pill" data-cmd="getmininginfo">getmininginfo</span>
+    <span class="help-pill" data-cmd="help">help</span>
+  </div>
+
+  <div class="console">
+    <div class="console-output" id="console-output"></div>
+    <div class="console-input-wrap">
+      <span class="ps">$ bitcoin-cli -regtest</span>
+      <input type="text" id="console-input" placeholder="getblockcount" autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+  <p class="small" style="margin-top: 10px;">↑/↓ for command history · supports a useful subset of the real RPC surface.</p>
+</section>
+
+</main>
+
+<footer class="sim-footer">
+  <span class="label fake">SIMULATED</span> keys, signatures, UTXOs, peer networking ·
+  <span class="label real">REAL</span> SHA-256, header serialization, merkle root, proof-of-work ·
+  no actual bitcoin involved at any point
+</footer>
+
+<div class="toast-stack" id="toast-stack"></div>
+
+<script>
+/* ==============================================================
+   SHA-256 — pure JS implementation (used for block hashing)
+   ============================================================== */
+const sha256 = (() => {
+  const K = new Uint32Array([
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+  ]);
+  function rotr(x, n) { return (x >>> n) | (x << (32 - n)); }
+  return function(bytes) {
+    const len = bytes.length;
+    const bitLenLow = (len << 3) >>> 0;
+    const bitLenHigh = Math.floor(len / 0x20000000);
+    const padLen = ((len + 9 + 63) & ~63);
+    const padded = new Uint8Array(padLen);
+    padded.set(bytes);
+    padded[len] = 0x80;
+    const view = new DataView(padded.buffer);
+    view.setUint32(padLen - 8, bitLenHigh, false);
+    view.setUint32(padLen - 4, bitLenLow, false);
+    const H = new Uint32Array([0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]);
+    const W = new Uint32Array(64);
+    for (let i = 0; i < padLen; i += 64) {
+      for (let j = 0; j < 16; j++) W[j] = view.getUint32(i + j*4, false);
+      for (let j = 16; j < 64; j++) {
+        const s0 = rotr(W[j-15], 7) ^ rotr(W[j-15], 18) ^ (W[j-15] >>> 3);
+        const s1 = rotr(W[j-2], 17) ^ rotr(W[j-2], 19) ^ (W[j-2] >>> 10);
+        W[j] = (W[j-16] + s0 + W[j-7] + s1) | 0;
+      }
+      let a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+      for (let j = 0; j < 64; j++) {
+        const S1 = rotr(e,6) ^ rotr(e,11) ^ rotr(e,25);
+        const ch = (e & f) ^ ((~e) & g);
+        const t1 = (h + S1 + ch + K[j] + W[j]) | 0;
+        const S0 = rotr(a,2) ^ rotr(a,13) ^ rotr(a,22);
+        const mj = (a & b) ^ (a & c) ^ (b & c);
+        const t2 = (S0 + mj) | 0;
+        h = g; g = f; f = e;
+        e = (d + t1) | 0;
+        d = c; c = b; b = a;
+        a = (t1 + t2) | 0;
+      }
+      H[0]=(H[0]+a)|0; H[1]=(H[1]+b)|0; H[2]=(H[2]+c)|0; H[3]=(H[3]+d)|0;
+      H[4]=(H[4]+e)|0; H[5]=(H[5]+f)|0; H[6]=(H[6]+g)|0; H[7]=(H[7]+h)|0;
+    }
+    const out = new Uint8Array(32);
+    const outView = new DataView(out.buffer);
+    for (let i = 0; i < 8; i++) outView.setUint32(i*4, H[i], false);
+    return out;
+  };
+})();
+
+const dsha256 = (b) => sha256(sha256(b));
+
+/* ==============================================================
+   Helpers
+   ============================================================== */
+const toHex = (bytes) => Array.from(bytes).map(b => b.toString(16).padStart(2,'0')).join('');
+const fromHex = (hex) => { const a = new Uint8Array(hex.length/2); for (let i = 0; i < a.length; i++) a[i] = parseInt(hex.substr(i*2,2),16); return a; };
+const reverseBytes = (b) => { const r = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) r[i] = b[b.length-1-i]; return r; };
+const concat = (...arrs) => { const total = arrs.reduce((s,a) => s+a.length, 0); const out = new Uint8Array(total); let o = 0; for (const a of arrs) { out.set(a, o); o += a.length; } return out; };
+const u32le = (n) => { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, n>>>0, true); return b; };
+const randBytes = (n) => { const b = new Uint8Array(n); crypto.getRandomValues(b); return b; };
+const randHex = (n) => toHex(randBytes(n));
+const fmtBtc = (sats) => (sats / 1e8).toFixed(8);
+const shortHash = (h) => h.slice(0,8) + '…' + h.slice(-6);
+
+function generateAddress() {
+  const chars = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+  let suffix = '';
+  for (let i = 0; i < 38; i++) suffix += chars[Math.floor(Math.random() * chars.length)];
+  return 'bcrt1q' + suffix;
+}
+
+function buildHeader({ version, prevHash, merkleRoot, time, bits, nonce }) {
+  return concat(
+    u32le(version),
+    reverseBytes(fromHex(prevHash)),
+    reverseBytes(fromHex(merkleRoot)),
+    u32le(time),
+    u32le(bits),
+    u32le(nonce)
+  );
+}
+
+function hashHeader(headerBytes) {
+  return toHex(reverseBytes(dsha256(headerBytes)));
+}
+
+function computeMerkleRoot(txids) {
+  if (txids.length === 0) return '00'.repeat(32);
+  let level = txids.map(t => reverseBytes(fromHex(t)));
+  while (level.length > 1) {
+    if (level.length % 2 === 1) level.push(level[level.length - 1]);
+    const next = [];
+    for (let i = 0; i < level.length; i += 2) {
+      next.push(dsha256(concat(level[i], level[i+1])));
+    }
+    level = next;
+  }
+  return toHex(reverseBytes(level[0]));
+}
+
+function computeMerkleTree(txids) {
+  if (txids.length === 0) return [['00'.repeat(32)]];
+  const tree = [txids.slice()];
+  let level = txids.map(t => reverseBytes(fromHex(t)));
+  while (level.length > 1) {
+    if (level.length % 2 === 1) level.push(level[level.length - 1]);
+    const next = [];
+    for (let i = 0; i < level.length; i += 2) next.push(dsha256(concat(level[i], level[i+1])));
+    level = next;
+    tree.push(level.map(b => toHex(reverseBytes(b))));
+  }
+  return tree;
+}
+
+/* ==============================================================
+   State
+   ============================================================== */
+const SUBSIDY = 50 * 1e8; // 50 BTC in sats
+const FEE = 20000; // 0.0002 BTC
+
+const state = {
+  chain: [],            // [{height, hash, header fields, txs}]
+  mempool: [],          // [tx]
+  walletTxs: [],        // [{txid, type, amount, addr, height|null}]
+  addresses: [],        // [{addr, label}]
+  difficulty: 4,
+  mining: false,      // a mineN batch is running (1 or many blocks)
+  searching: false,   // a nonce search is in progress right now
+  stopMining: false,
+};
+
+// REGTEST genesis hash (real value from Bitcoin Core)
+function makeGenesis() {
+  return {
+    height: 0,
+    hash: '0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206',
+    version: 1,
+    prevHash: '00'.repeat(32),
+    merkleRoot: '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b',
+    time: 1296688602,
+    bits: 0x207fffff,
+    nonce: 2,
+    txs: [{
+      txid: '4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b',
+      type: 'coinbase',
+      amount: SUBSIDY,
+      to: '(genesis output — unspendable)',
+    }],
+  };
+}
+
+/* ==============================================================
+   Persistence (localStorage)
+   ============================================================== */
+const STORAGE_KEY = 'bitcoin-play-state-v1';
+
+function _stateSnapshot() {
+  return {
+    chain: state.chain,
+    mempool: state.mempool,
+    walletTxs: state.walletTxs,
+    addresses: state.addresses,
+    difficulty: state.difficulty,
+  };
+}
+
+let _saveTimer = null;
+function saveState() {
+  // Throttle to ~250ms — avoids JSON.stringify on every render during a mining batch
+  if (_saveTimer) return;
+  _saveTimer = setTimeout(() => {
+    _saveTimer = null;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(_stateSnapshot())); } catch (e) {}
+  }, 250);
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (Array.isArray(data.chain) && data.chain.length > 0) state.chain = data.chain;
+    if (Array.isArray(data.mempool)) state.mempool = data.mempool;
+    if (Array.isArray(data.walletTxs)) state.walletTxs = data.walletTxs;
+    if (Array.isArray(data.addresses)) state.addresses = data.addresses;
+    if (typeof data.difficulty === 'number') state.difficulty = data.difficulty;
+    return true;
+  } catch (e) { return false; }
+}
+
+function resetState() {
+  if (state.searching) { toast('Stop mining first', 'error'); return; }
+  if (!confirm('Reset everything? This wipes all blocks, addresses, wallet history, and the reorg demo.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state.chain = [makeGenesis()];
+  state.mempool = [];
+  state.walletTxs = [];
+  state.addresses = [];
+  state.candidate = null;
+  // Also reset the reorg demo
+  if (typeof reorgInit === 'function') { reorgInit(); renderReorg(); }
+  prepareTemplate(ensureMiningAddress());
+  renderAll();
+  toast('Playground reset to genesis');
+}
+
+function exportState() {
+  const data = JSON.stringify({
+    appName: 'bitcoin-play',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    ..._stateSnapshot(),
+  }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `bitcoin-play-state-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast(`Exported (${(data.length / 1024).toFixed(1)} KB)`);
+}
+
+function importStateFromFile(file) {
+  if (state.searching) { toast('Stop mining first', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data || !Array.isArray(data.chain) || data.chain.length === 0) {
+        throw new Error('No valid chain in file');
+      }
+      if (!confirm(`Import state with ${data.chain.length} blocks and ${(data.addresses || []).length} addresses? Current playground state will be replaced.`)) return;
+      state.chain = data.chain;
+      state.mempool = Array.isArray(data.mempool) ? data.mempool : [];
+      state.walletTxs = Array.isArray(data.walletTxs) ? data.walletTxs : [];
+      state.addresses = Array.isArray(data.addresses) ? data.addresses : [];
+      if (typeof data.difficulty === 'number') {
+        state.difficulty = data.difficulty;
+        $('#difficulty').value = data.difficulty;
+        $('#difficulty-label').textContent = data.difficulty + ' zeros';
+      }
+      state.candidate = null;
+      prepareTemplate(ensureMiningAddress());
+      renderAll();
+      toast(`Imported ${state.chain.length - 1} blocks`);
+    } catch (err) {
+      toast('Import failed: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ==============================================================
+   UI helpers
+   ============================================================== */
+function $(sel) { return document.querySelector(sel); }
+function $$(sel) { return Array.from(document.querySelectorAll(sel)); }
+
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type !== 'success' ? type : '');
+  el.textContent = msg;
+  $('#toast-stack').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(20px)'; el.style.transition = 'all 0.3s'; }, 2400);
+  setTimeout(() => el.remove(), 2800);
+}
+
+function highlightHash(hex, leadingZeros) {
+  const lead = '0'.repeat(leadingZeros);
+  if (hex.startsWith(lead)) {
+    return `<span class="leading-zeros">${lead}</span><span class="rest">${hex.slice(leadingZeros)}</span>`;
+  }
+  return `<span class="rest">${hex}</span>`;
+}
+
+function copyText(btn) {
+  const text = btn.parentElement.innerText.replace(/^copy\n/, '').trim();
+  navigator.clipboard.writeText(text).then(() => { btn.textContent = 'copied'; setTimeout(() => btn.textContent = 'copy', 1200); });
+}
+window.copyText = copyText;
+
+/* ==============================================================
+   Wallet logic
+   ============================================================== */
+function walletBalance() {
+  // Confirmed coinbase needs 100 confirmations to mature
+  const tipHeight = state.chain.length - 1;
+  let confirmed = 0, immature = 0;
+  for (const tx of state.walletTxs) {
+    if (tx.height === null) continue;
+    if (tx.type === 'coinbase') {
+      const confs = tipHeight - tx.height + 1;
+      if (confs >= 100) confirmed += tx.amount;
+      else immature += tx.amount;
+    } else if (tx.type === 'receive') {
+      confirmed += tx.amount;
+    } else if (tx.type === 'send') {
+      confirmed -= tx.amount + tx.fee;
+    } else if (tx.type === 'self') {
+      // net zero except fee
+      confirmed -= tx.fee;
+    }
+  }
+  // Pending (mempool) sends reduce available balance
+  let pendingOut = 0;
+  for (const tx of state.mempool) {
+    if (tx.fromOurs) pendingOut += tx.amount + tx.fee;
+  }
+  return { confirmed, immature, available: confirmed - pendingOut, pendingOut };
+}
+
+function ourAddresses() { return new Set(state.addresses.map(a => a.addr)); }
+
+function newAddress(label = null) {
+  const addr = generateAddress();
+  state.addresses.push({ addr, label: label || `addr #${state.addresses.length + 1}` });
+  return addr;
+}
+
+/* ==============================================================
+   Transaction & block creation
+   ============================================================== */
+function makeTx({ from, to, amount, fee = FEE, fromOurs }) {
+  const txid = randHex(32);
+  return { txid, from, to, amount, fee, fromOurs, type: 'transfer' };
+}
+
+function makeCoinbase(toAddr, height, extraFees = 0) {
+  // Coinbase scriptSig encodes height per BIP34
+  const heightHex = height.toString(16).padStart(2, '0');
+  const scriptSig = `0${(heightHex.length/2).toString(16)}${heightHex}` + randHex(8);
+  const txid = toHex(dsha256(fromHex(scriptSig + randHex(16))));
+  return {
+    txid,
+    type: 'coinbase',
+    amount: SUBSIDY + extraFees,
+    to: toAddr,
+    scriptSig,
+    height,
+  };
+}
+
+/* ==============================================================
+   Block template (getblocktemplate equivalent)
+   ============================================================== */
+function prepareTemplate(toAddr) {
+  if (state.searching) return; // don't disturb an in-flight nonce search
+  toAddr = toAddr || (state.addresses[0] && state.addresses[0].addr) || ensureMiningAddress();
+  const tip = state.chain[state.chain.length - 1];
+  const height = tip.height + 1;
+  const fees = state.mempool.reduce((s, t) => s + t.fee, 0);
+  const coinbase = makeCoinbase(toAddr, height, fees);
+  const blockTxs = [coinbase, ...state.mempool];
+  const merkleRoot = computeMerkleRoot(blockTxs.map(t => t.txid));
+  // Bitcoin requires timestamps to be monotonically increasing (above median of last 11)
+  const time = Math.max(tip.time + 1, Math.floor(Date.now() / 1000));
+  state.candidate = {
+    height,
+    version: 0x20000000,
+    prevHash: tip.hash,
+    merkleRoot,
+    time,
+    bits: 0x207fffff,
+    txs: blockTxs,
+    fees,
+    toAddr,
+  };
+  renderTemplate();
+}
+
+function renderTemplate() {
+  const c = state.candidate;
+  if (!c) return;
+  const target = '0'.repeat(state.difficulty);
+  const mempoolCount = c.txs.length - 1;
+  $('#candidate-title').textContent = `Candidate block #${c.height}`;
+  $('#candidate-summary').innerHTML =
+    `1 coinbase + ${mempoolCount} mempool tx${mempoolCount !== 1 ? 's' : ''} = ${c.txs.length} transaction${c.txs.length !== 1 ? 's' : ''} · ` +
+    `block reward: <b style="color:var(--orange);">${fmtBtc(SUBSIDY + c.fees)}</b> BTC (${fmtBtc(SUBSIDY)} subsidy + ${fmtBtc(c.fees)} fees) · ` +
+    `paying coinbase to <span class="mono" style="color:var(--text-muted);">${c.toAddr.slice(0,18)}…</span>`;
+  $('#hf-prev').innerHTML = `<span class="rest">${c.prevHash}</span>`;
+  $('#hf-merkle').innerHTML = `<span class="rest">${c.merkleRoot}</span>`;
+  $('#hf-time').textContent = c.time + ' (' + new Date(c.time * 1000).toLocaleTimeString() + ')';
+  $('#hf-bits').textContent = '0x' + c.bits.toString(16);
+  $('#hf-nonce').textContent = '0 (not mined yet)';
+  $('#mining-nonce').textContent = '0';
+  $('#mining-attempts').textContent = '0';
+  $('#mining-rate').textContent = '0 H/s';
+  $('#target-display').textContent = target;
+  // Show what the hash looks like at nonce=0 — gives a sense of "starting point"
+  const initialHash = hashHeader(buildHeader({ ...c, nonce: 0 }));
+  $('#mining-hash').innerHTML = highlightHash(initialHash, state.difficulty);
+  $('#mining-status').textContent = 'template ready · click Mine to start the nonce search';
+}
+
+/* ==============================================================
+   Mining
+   ============================================================== */
+async function mineBlock(toAddr) {
+  // Make sure we have a candidate paying to the right address
+  if (!state.candidate || (toAddr && state.candidate.toAddr !== toAddr)) {
+    state.candidate = null;
+    prepareTemplate(toAddr);
+  }
+  const c = state.candidate;
+  const target = '0'.repeat(state.difficulty);
+  let nonce = 0;
+  let attempts = 0;
+  const startTime = performance.now();
+  let lastUiUpdate = 0;
+  let foundHash = null;
+
+  $('#target-display').textContent = target;
+  $('#mining-status').textContent = `mining block #${c.height}…`;
+  $('#rig').classList.add('active');
+  state.searching = true;
+
+  const BATCH = 500;
+
+  return new Promise((resolve) => {
+    function tick() {
+      if (state.stopMining) {
+        state.searching = false;
+        $('#mining-status').textContent = 'stopped';
+        $('#rig').classList.remove('active');
+        resolve(null);
+        return;
+      }
+      for (let i = 0; i < BATCH; i++) {
+        const header = buildHeader({ version: c.version, prevHash: c.prevHash, merkleRoot: c.merkleRoot, time: c.time, bits: c.bits, nonce });
+        const hash = hashHeader(header);
+        attempts++;
+        if (hash.startsWith(target)) {
+          foundHash = hash;
+          break;
+        }
+        nonce++;
+      }
+      const now = performance.now();
+      if (foundHash || now - lastUiUpdate > 50) {
+        lastUiUpdate = now;
+        const elapsed = (now - startTime) / 1000;
+        const rate = elapsed > 0 ? Math.round(attempts / elapsed) : 0;
+        $('#mining-nonce').textContent = nonce.toLocaleString();
+        $('#mining-attempts').textContent = attempts.toLocaleString();
+        $('#mining-rate').textContent = rate.toLocaleString() + ' H/s';
+        $('#hf-nonce').textContent = nonce;
+        const lastHash = foundHash || hashHeader(buildHeader({ version: c.version, prevHash: c.prevHash, merkleRoot: c.merkleRoot, time: c.time, bits: c.bits, nonce }));
+        $('#mining-hash').innerHTML = highlightHash(lastHash, state.difficulty);
+      }
+      if (foundHash) {
+        state.searching = false;
+        $('#mining-status').innerHTML = `<span style="color: var(--green); font-weight: 700;">✓ block #${c.height} found and accepted</span>`;
+        $('#rig').classList.remove('active');
+        $('#rig').classList.add('found');
+        setTimeout(() => $('#rig').classList.remove('found'), 600);
+
+        const block = {
+          height: c.height,
+          hash: foundHash,
+          version: c.version, prevHash: c.prevHash, merkleRoot: c.merkleRoot,
+          time: c.time, bits: c.bits, nonce,
+          txs: c.txs,
+        };
+        state.chain.push(block);
+
+        // Wallet bookkeeping
+        const ours = ourAddresses();
+        const coinbase = c.txs[0];
+        if (ours.has(c.toAddr)) {
+          state.walletTxs.push({
+            txid: coinbase.txid, type: 'coinbase',
+            amount: coinbase.amount, addr: c.toAddr,
+            height: c.height, time: c.time,
+          });
+        }
+        for (const tx of c.txs.slice(1)) {
+          const isOurFrom = ours.has(tx.from);
+          const isOurTo = ours.has(tx.to);
+          if (isOurFrom && isOurTo) {
+            state.walletTxs.push({ txid: tx.txid, type: 'self', amount: tx.amount, fee: tx.fee, addr: tx.to, height: c.height, time: c.time });
+          } else if (isOurFrom) {
+            state.walletTxs.push({ txid: tx.txid, type: 'send', amount: tx.amount, fee: tx.fee, addr: tx.to, height: c.height, time: c.time });
+          } else if (isOurTo) {
+            state.walletTxs.push({ txid: tx.txid, type: 'receive', amount: tx.amount, fee: 0, addr: tx.to, height: c.height, time: c.time });
+          }
+        }
+        state.mempool = [];
+        state.candidate = null;
+
+        renderAll();
+        prepareTemplate(c.toAddr);
+        resolve(block);
+      } else {
+        setTimeout(tick, 0);
+      }
+    }
+    tick();
+  });
+}
+
+async function mineN(n, addr) {
+  if (state.mining) { toast('Already mining', 'error'); return; }
+  state.mining = true;
+  state.stopMining = false;
+  $('#btn-stop').disabled = false;
+  $('#btn-mine-1').disabled = $('#btn-mine-10').disabled = $('#btn-mine-101').disabled = true;
+  for (let i = 0; i < n; i++) {
+    if (state.stopMining) break;
+    const block = await mineBlock(addr);
+    if (!block) break;
+    if (n > 1) await new Promise(r => setTimeout(r, 30));
+  }
+  state.mining = false;
+  $('#btn-stop').disabled = true;
+  $('#btn-mine-1').disabled = $('#btn-mine-10').disabled = $('#btn-mine-101').disabled = false;
+}
+
+/* ==============================================================
+   Rendering
+   ============================================================== */
+function renderHeaderStats() {
+  $('#stat-height').textContent = state.chain.length - 1;
+  $('#stat-mempool').textContent = state.mempool.length;
+  const bal = walletBalance();
+  $('#stat-balance').textContent = fmtBtc(bal.available);
+}
+
+function renderChainStrip(targetId, onSelect, selectedHeight = null) {
+  const el = $(targetId);
+  el.innerHTML = '';
+  const blocks = state.chain;
+  const start = Math.max(0, blocks.length - 30);
+  if (start > 0) {
+    const more = document.createElement('div');
+    more.className = 'chain-arrow';
+    more.textContent = `… ${start} earlier`;
+    el.appendChild(more);
+  }
+  for (let i = start; i < blocks.length; i++) {
+    const b = blocks[i];
+    const div = document.createElement('div');
+    div.className = 'chain-block' + (b.height === 0 ? ' genesis' : '') + (b.height === selectedHeight ? ' selected' : '');
+    if (i === blocks.length - 1 && i > 0) div.classList.add('new');
+    div.innerHTML = `
+      <div class="height">#${b.height}</div>
+      <div class="hash-short">${b.hash.slice(0, 16)}…</div>
+      <div class="tx-count">${b.txs.length} tx${b.txs.length !== 1 ? 's' : ''}</div>
+    `;
+    div.onclick = () => onSelect(b);
+    el.appendChild(div);
+    if (i < blocks.length - 1) {
+      const arrow = document.createElement('div');
+      arrow.className = 'chain-arrow';
+      arrow.textContent = '→';
+      el.appendChild(arrow);
+    }
+  }
+  // scroll to end
+  setTimeout(() => { el.scrollLeft = el.scrollWidth; }, 0);
+}
+
+function renderMiningChain() {
+  renderChainStrip('#chain-strip', (b) => { showSection('explorer'); selectBlock(b.height); });
+}
+
+function renderWallet() {
+  const bal = walletBalance();
+  $('#wallet-balance').innerHTML = `${fmtBtc(bal.available)}<small>BTC</small>`;
+  let pendingMsg = '';
+  if (bal.immature > 0) pendingMsg += `${fmtBtc(bal.immature)} immature (coinbase needs 100 confirmations). `;
+  if (bal.pendingOut > 0) pendingMsg += `${fmtBtc(bal.pendingOut)} locked in mempool. `;
+  $('#wallet-pending').textContent = pendingMsg || 'No pending balance.';
+
+  // address list
+  const list = $('#address-list');
+  if (state.addresses.length === 0) {
+    list.innerHTML = '<div class="empty">No addresses yet — click "getnewaddress" to create one.</div>';
+  } else {
+    list.innerHTML = '';
+    for (const a of state.addresses) {
+      const row = document.createElement('div');
+      row.className = 'address-row';
+      // compute per-address balance from received coinbase + receives
+      let received = 0;
+      const tipHeight = state.chain.length - 1;
+      for (const tx of state.walletTxs) {
+        if (tx.height === null) continue;
+        if (tx.addr === a.addr) {
+          if (tx.type === 'coinbase') {
+            const confs = tipHeight - tx.height + 1;
+            if (confs >= 100) received += tx.amount;
+          } else if (tx.type === 'receive' || tx.type === 'self') received += tx.amount;
+        }
+      }
+      row.innerHTML = `<span class="addr">${a.addr}</span><span class="bal">${fmtBtc(received)} BTC</span>`;
+      list.appendChild(row);
+    }
+  }
+
+  // send-from / send-to selects
+  const fromSel = $('#send-from');
+  const toSel = $('#send-to');
+  fromSel.innerHTML = '';
+  toSel.innerHTML = '';
+  if (state.addresses.length === 0) {
+    fromSel.innerHTML = '<option value="">(create an address first)</option>';
+    toSel.innerHTML = '<option value="">(create an address first)</option>';
+  } else {
+    for (const a of state.addresses) {
+      const label = a.addr.slice(0, 24) + '…' + a.addr.slice(-8);
+      const fromOpt = document.createElement('option');
+      fromOpt.value = a.addr; fromOpt.textContent = label;
+      fromSel.appendChild(fromOpt);
+      const toOpt = document.createElement('option');
+      toOpt.value = a.addr; toOpt.textContent = label;
+      toSel.appendChild(toOpt);
+    }
+    const newOpt = document.createElement('option');
+    newOpt.value = '__new__';
+    newOpt.textContent = '+ generate new address';
+    toSel.appendChild(newOpt);
+  }
+
+  // mempool
+  const mp = $('#mempool-list');
+  $('#mempool-count').textContent = `${state.mempool.length} unconfirmed`;
+  if (state.mempool.length === 0) {
+    mp.innerHTML = '<div class="empty">Mempool is empty. Send a transaction to see it queue here.</div>';
+  } else {
+    mp.innerHTML = '';
+    for (const tx of state.mempool) {
+      const row = document.createElement('div');
+      row.className = 'tx-row';
+      row.innerHTML = `
+        <div class="top">
+          <span class="txid">${shortHash(tx.txid)}</span>
+          <span class="pending">PENDING</span>
+        </div>
+        <div>
+          <span class="hash" style="color: var(--text-muted);">${tx.from.slice(0, 16)}…</span>
+          <span class="arrow">→</span>
+          <span class="hash" style="color: var(--text-muted);">${tx.to.slice(0, 16)}…</span>
+          <span class="amount" style="float: right;">${fmtBtc(tx.amount)} BTC</span>
+        </div>
+      `;
+      mp.appendChild(row);
+    }
+  }
+
+  // wallet tx list
+  const wl = $('#wallet-tx-list');
+  if (state.walletTxs.length === 0) {
+    wl.innerHTML = '<div class="empty">No transactions yet.</div>';
+  } else {
+    wl.innerHTML = '';
+    const recent = state.walletTxs.slice().reverse().slice(0, 12);
+    for (const tx of recent) {
+      const tipHeight = state.chain.length - 1;
+      const confs = tx.height !== null ? tipHeight - tx.height + 1 : 0;
+      const row = document.createElement('div');
+      row.className = 'tx-row';
+      let typeLabel = '';
+      let amountStr = '';
+      switch (tx.type) {
+        case 'coinbase':
+          typeLabel = `<span class="confirmed">COINBASE${confs < 100 ? ' (immature)' : ''}</span>`;
+          amountStr = `+${fmtBtc(tx.amount)}`;
+          break;
+        case 'receive':
+          typeLabel = `<span class="confirmed">RECEIVED</span>`;
+          amountStr = `+${fmtBtc(tx.amount)}`;
+          break;
+        case 'send':
+          typeLabel = `<span class="confirmed" style="background: var(--red-soft); color: var(--red);">SENT</span>`;
+          amountStr = `-${fmtBtc(tx.amount + tx.fee)}`;
+          break;
+        case 'self':
+          typeLabel = `<span class="confirmed" style="background: rgba(167,139,250,0.12); color: var(--purple);">SELF-SEND</span>`;
+          amountStr = `-${fmtBtc(tx.fee)} (fee)`;
+          break;
+      }
+      row.innerHTML = `
+        <div class="top">
+          <span class="txid">${shortHash(tx.txid)}</span>
+          ${typeLabel}
+        </div>
+        <div>
+          <span style="color: var(--text-muted); font-size: 11px;">block #${tx.height} · ${confs} conf${confs !== 1 ? 's' : ''}</span>
+          <span class="amount" style="float: right;">${amountStr} BTC</span>
+        </div>
+      `;
+      wl.appendChild(row);
+    }
+  }
+}
+
+function renderExplorer() {
+  renderChainStrip('#explorer-strip', (b) => selectBlock(b.height), explorerSelected);
+}
+
+let explorerSelected = null;
+function selectBlock(height) {
+  explorerSelected = height;
+  const b = state.chain[height];
+  if (!b) return;
+  renderExplorer();
+
+  $('#block-header').innerHTML = `
+    <dt>height</dt><dd>${b.height}</dd>
+    <dt>hash</dt><dd class="hash">${highlightHash(b.hash, state.difficulty)}</dd>
+    <dt>version</dt><dd>0x${b.version.toString(16).padStart(8, '0')}</dd>
+    <dt>previous block</dt><dd class="hash">${b.prevHash}</dd>
+    <dt>merkle root</dt><dd class="hash">${b.merkleRoot}</dd>
+    <dt>timestamp</dt><dd>${b.time} <span class="small">(${new Date(b.time * 1000).toLocaleString()})</span></dd>
+    <dt>bits</dt><dd>0x${b.bits.toString(16)}</dd>
+    <dt>nonce</dt><dd>${b.nonce.toLocaleString()}</dd>
+    <dt>tx count</dt><dd>${b.txs.length}</dd>
+  `;
+
+  // Raw header
+  if (b.height > 0) {
+    const headerBytes = buildHeader({
+      version: b.version, prevHash: b.prevHash, merkleRoot: b.merkleRoot,
+      time: b.time, bits: b.bits, nonce: b.nonce
+    });
+    $('#block-raw').textContent = toHex(headerBytes);
+  } else {
+    $('#block-raw').textContent = '(genesis block — header values shown above)';
+  }
+
+  // Merkle tree
+  const treeEl = $('#block-merkle');
+  const txids = b.txs.map(t => t.txid);
+  if (txids.length === 0) {
+    treeEl.innerHTML = '<div class="empty">no transactions</div>';
+  } else {
+    const tree = computeMerkleTree(txids);
+    treeEl.innerHTML = '<div class="merkle-tree" id="mt"></div>';
+    const mt = treeEl.querySelector('#mt');
+    // render top down
+    for (let i = tree.length - 1; i >= 0; i--) {
+      const row = document.createElement('div');
+      row.className = 'merkle-row';
+      const isRoot = i === tree.length - 1;
+      const isLeaves = i === 0;
+      for (const node of tree[i]) {
+        const n = document.createElement('div');
+        n.className = 'merkle-node' + (isRoot ? ' root' : '') + (isLeaves ? ' tx' : '');
+        n.textContent = isRoot ? `root: ${shortHash(node)}` : shortHash(node);
+        n.title = node;
+        row.appendChild(n);
+      }
+      mt.appendChild(row);
+    }
+  }
+
+  // Txs
+  const txel = $('#block-txs');
+  txel.innerHTML = '';
+  b.txs.forEach((tx, i) => {
+    const row = document.createElement('div');
+    row.className = 'tx-row';
+    if (tx.type === 'coinbase') {
+      row.innerHTML = `
+        <div class="top">
+          <span class="txid">${shortHash(tx.txid)}</span>
+          <span class="confirmed" style="background: var(--orange-glow); color: var(--orange);">COINBASE</span>
+        </div>
+        <div>
+          <span style="color: var(--text-muted);">→ ${tx.to}</span>
+          <span class="amount" style="float: right;">+${fmtBtc(tx.amount)} BTC</span>
+        </div>
+        ${tx.scriptSig ? `<div class="small" style="margin-top: 6px; color: var(--text-dim);">scriptSig: ${tx.scriptSig} <span style="color: var(--orange);">// height ${tx.height} per BIP34</span></div>` : ''}
+      `;
+    } else {
+      row.innerHTML = `
+        <div class="top">
+          <span class="txid">${shortHash(tx.txid)}</span>
+          <span class="confirmed">CONFIRMED</span>
+        </div>
+        <div>
+          <span style="color: var(--text-muted);">${tx.from.slice(0, 20)}…</span>
+          <span class="arrow">→</span>
+          <span style="color: var(--text-muted);">${tx.to.slice(0, 20)}…</span>
+          <span class="amount" style="float: right;">${fmtBtc(tx.amount)} BTC</span>
+        </div>
+        <div class="small" style="margin-top: 4px; color: var(--text-dim);">fee: ${fmtBtc(tx.fee)} BTC</div>
+      `;
+    }
+    txel.appendChild(row);
+  });
+}
+
+function renderAll() {
+  renderHeaderStats();
+  renderWallet();
+  renderMiningChain();
+  renderExplorer();
+  if (explorerSelected !== null && state.chain[explorerSelected]) selectBlock(explorerSelected);
+  saveState();
+}
+
+/* ==============================================================
+   Section nav
+   ============================================================== */
+function showSection(name) {
+  $$('.section').forEach(s => s.classList.remove('active'));
+  $$('.nav button').forEach(b => b.classList.remove('active'));
+  const sec = $('#section-' + name);
+  if (sec) sec.classList.add('active');
+  const navBtn = $$('.nav button').find(b => b.dataset.section === name);
+  if (navBtn) navBtn.classList.add('active');
+  if (name === 'explorer' && explorerSelected === null) selectBlock(state.chain.length - 1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+$$('.nav button').forEach(b => b.onclick = () => showSection(b.dataset.section));
+$$('[data-goto]').forEach(b => b.onclick = (e) => { e.preventDefault(); showSection(b.dataset.goto); });
+
+/* ==============================================================
+   Mining controls
+   ============================================================== */
+$('#difficulty').oninput = (e) => {
+  state.difficulty = parseInt(e.target.value, 10);
+  $('#difficulty-label').textContent = state.difficulty + ' zeros';
+  $('#target-display').textContent = '0'.repeat(state.difficulty);
+  if (!state.mining) renderTemplate();
+};
+
+function ensureMiningAddress() {
+  if (state.addresses.length === 0) newAddress('mining reward');
+  return state.addresses[0].addr;
+}
+
+$('#btn-mine-1').onclick = () => mineN(1, ensureMiningAddress());
+$('#btn-mine-10').onclick = () => mineN(10, ensureMiningAddress());
+$('#btn-mine-101').onclick = () => mineN(101, ensureMiningAddress());
+$('#btn-refresh-template').onclick = () => { prepareTemplate(ensureMiningAddress()); toast('Template refreshed'); };
+$('#btn-stop').onclick = () => { state.stopMining = true; };
+
+/* ==============================================================
+   Wallet controls
+   ============================================================== */
+$('#btn-new-address').onclick = () => {
+  const addr = newAddress();
+  toast('Generated ' + addr.slice(0, 16) + '…');
+  renderAll();
+};
+
+$('#btn-mine-block').onclick = () => mineN(1, ensureMiningAddress());
+
+$('#btn-send').onclick = () => {
+  const from = $('#send-from').value;
+  let to = $('#send-to').value;
+  const amount = Math.round(parseFloat($('#send-amount').value) * 1e8);
+  if (!from) return toast('No source address', 'error');
+  if (!to) return toast('Pick a destination address', 'error');
+  if (to === '__new__') {
+    to = newAddress();
+    toast('Generated ' + to.slice(0, 16) + '… as destination');
+  }
+  if (!to.startsWith('bcrt1')) return toast('Destination must be a bcrt1 address', 'error');
+  if (!amount || amount <= 0) return toast('Invalid amount', 'error');
+  const bal = walletBalance();
+  if (amount + FEE > bal.available) return toast('Insufficient balance', 'error');
+  const tx = makeTx({ from, to, amount, fee: FEE, fromOurs: true });
+  state.mempool.push(tx);
+  toast('Sent ' + fmtBtc(amount) + ' BTC → mempool');
+  prepareTemplate(ensureMiningAddress());
+  renderAll();
+};
+
+$('#btn-self-send').onclick = () => {
+  if (state.addresses.length === 0) { toast('Create an address first', 'error'); return; }
+  const from = state.addresses[0].addr;
+  const to = state.addresses.length > 1 ? state.addresses[1].addr : newAddress('self-send target');
+  const amount = 100000000; // 1 BTC
+  const bal = walletBalance();
+  if (amount + FEE > bal.available) return toast('Insufficient balance', 'error');
+  state.mempool.push(makeTx({ from, to, amount, fee: FEE, fromOurs: true }));
+  toast('Self-send queued in mempool');
+  prepareTemplate(ensureMiningAddress());
+  renderAll();
+};
+
+/* ==============================================================
+   RPC console
+   ============================================================== */
+const consoleHistory = [];
+let historyIdx = -1;
+
+function consoleWrite(text, cls = 'out') {
+  const out = $('#console-output');
+  const lines = String(text).split('\n');
+  for (const line of lines) {
+    const div = document.createElement('div');
+    div.className = 'console-line ' + cls;
+    div.textContent = line;
+    out.appendChild(div);
+  }
+  out.scrollTop = out.scrollHeight;
+}
+
+function consolePrintCmd(cmd) {
+  const div = document.createElement('div');
+  div.className = 'console-line cmd';
+  div.textContent = cmd;
+  $('#console-output').appendChild(div);
+}
+
+function jsonStr(obj) { return JSON.stringify(obj, null, 2); }
+
+const rpc = {
+  help() {
+    return [
+      'Available commands (subset of real bitcoin-cli):',
+      '  getblockchaininfo          - chain status',
+      '  getblockcount              - height of best block',
+      '  getbestblockhash           - hash of best block',
+      '  getblockhash <height>      - hash of block at height',
+      '  getblock <hash> [verbosity] - block data (verbosity 0|1|2)',
+      '  getmininginfo              - mining stats',
+      '  getbalance                 - confirmed wallet balance',
+      '  getnewaddress              - generate a new address',
+      '  listreceivedbyaddress      - addresses with received amounts',
+      '  getrawmempool              - txids in mempool',
+      '  gettransaction <txid>      - tx details',
+      '  sendtoaddress <addr> <amt> - create + broadcast a tx',
+      '  generatetoaddress <n> <addr> - mine n blocks',
+      '  stop                       - (no-op in simulator)',
+      '  clear                      - clear the console',
+    ].join('\n');
+  },
+  clear() { $('#console-output').innerHTML = ''; return null; },
+  stop() { return 'Bitcoin Core stopping (simulator: no-op)'; },
+  getblockchaininfo() {
+    const tip = state.chain[state.chain.length - 1];
+    return jsonStr({
+      chain: 'regtest',
+      blocks: tip.height,
+      headers: tip.height,
+      bestblockhash: tip.hash,
+      difficulty: 4.656542373906925e-10,
+      mediantime: tip.time,
+      verificationprogress: 1,
+      initialblockdownload: false,
+      chainwork: '00'.repeat(28) + (tip.height + 1).toString(16).padStart(8, '0'),
+      pruned: false,
+      warnings: '',
+    });
+  },
+  getblockcount() { return String(state.chain.length - 1); },
+  getbestblockhash() { return state.chain[state.chain.length - 1].hash; },
+  getblockhash(args) {
+    const h = parseInt(args[0], 10);
+    if (isNaN(h) || h < 0 || h >= state.chain.length) throw new Error('Block height out of range');
+    return state.chain[h].hash;
+  },
+  getblock(args) {
+    const hash = args[0];
+    const verbosity = args[1] ? parseInt(args[1], 10) : 1;
+    const b = state.chain.find(x => x.hash === hash);
+    if (!b) throw new Error('Block not found');
+    const base = {
+      hash: b.hash,
+      confirmations: state.chain.length - b.height,
+      height: b.height,
+      version: b.version,
+      versionHex: b.version.toString(16).padStart(8, '0'),
+      merkleroot: b.merkleRoot,
+      time: b.time,
+      mediantime: b.time,
+      nonce: b.nonce,
+      bits: b.bits.toString(16),
+      difficulty: 4.656542373906925e-10,
+      previousblockhash: b.prevHash,
+      nTx: b.txs.length,
+    };
+    if (verbosity === 0) {
+      // serialized hex (header only here)
+      return toHex(buildHeader({ version: b.version, prevHash: b.prevHash, merkleRoot: b.merkleRoot, time: b.time, bits: b.bits, nonce: b.nonce }));
+    }
+    if (verbosity === 1) return jsonStr({ ...base, tx: b.txs.map(t => t.txid) });
+    return jsonStr({ ...base, tx: b.txs.map(t => ({
+      txid: t.txid,
+      hash: t.txid,
+      type: t.type || 'transfer',
+      ...(t.type === 'coinbase' ? { vin: [{ coinbase: t.scriptSig, sequence: 4294967295 }], vout: [{ value: t.amount/1e8, n: 0, scriptPubKey: { addresses: [t.to] } }] } : {
+        vin: [{ txid: '...', vout: 0 }],
+        vout: [{ value: t.amount/1e8, n: 0, scriptPubKey: { addresses: [t.to] } }],
+      }),
+    })) });
+  },
+  getmininginfo() {
+    return jsonStr({
+      blocks: state.chain.length - 1,
+      difficulty: 4.656542373906925e-10,
+      networkhashps: 0,
+      pooledtx: state.mempool.length,
+      chain: 'regtest',
+    });
+  },
+  getbalance() { return fmtBtc(walletBalance().confirmed); },
+  getnewaddress() {
+    const a = newAddress();
+    renderAll();
+    return a;
+  },
+  listreceivedbyaddress() {
+    const tipHeight = state.chain.length - 1;
+    const out = state.addresses.map(a => {
+      let amount = 0, count = 0;
+      for (const tx of state.walletTxs) {
+        if (tx.height === null) continue;
+        if (tx.addr !== a.addr) continue;
+        if (tx.type === 'coinbase') {
+          if (tipHeight - tx.height + 1 >= 100) { amount += tx.amount; count++; }
+        } else if (tx.type === 'receive' || tx.type === 'self') { amount += tx.amount; count++; }
+      }
+      return { address: a.addr, amount: amount/1e8, confirmations: tipHeight, label: a.label, txids_count: count };
+    });
+    return jsonStr(out);
+  },
+  getrawmempool() { return jsonStr(state.mempool.map(t => t.txid)); },
+  gettransaction(args) {
+    const txid = args[0];
+    const inMempool = state.mempool.find(t => t.txid === txid);
+    if (inMempool) return jsonStr({ txid, confirmations: 0, in_mempool: true, amount: -inMempool.amount/1e8, fee: -inMempool.fee/1e8 });
+    for (const b of state.chain) {
+      const t = b.txs.find(x => x.txid === txid);
+      if (t) return jsonStr({ txid, blockhash: b.hash, blockheight: b.height, confirmations: state.chain.length - b.height, time: b.time, type: t.type || 'transfer' });
+    }
+    throw new Error('Invalid or non-wallet transaction id');
+  },
+  sendtoaddress(args) {
+    const to = args[0];
+    const amount = Math.round(parseFloat(args[1]) * 1e8);
+    if (!to || !to.startsWith('bcrt1')) throw new Error('Invalid bcrt1 address');
+    if (!amount) throw new Error('Invalid amount');
+    if (state.addresses.length === 0) throw new Error('No wallet addresses (run getnewaddress first)');
+    const from = state.addresses[0].addr;
+    const bal = walletBalance();
+    if (amount + FEE > bal.available) throw new Error('Insufficient funds');
+    const tx = makeTx({ from, to, amount, fee: FEE, fromOurs: true });
+    state.mempool.push(tx);
+    prepareTemplate(ensureMiningAddress());
+    renderAll();
+    return tx.txid;
+  },
+  async generatetoaddress(args) {
+    const n = parseInt(args[0], 10);
+    const addr = args[1];
+    if (!n || !addr) throw new Error('usage: generatetoaddress <n> <addr>');
+    const hashes = [];
+    for (let i = 0; i < n; i++) {
+      const block = await mineBlock(addr);
+      if (block) hashes.push(block.hash);
+    }
+    return jsonStr(hashes);
+  },
+};
+
+async function runRpc(line) {
+  consolePrintCmd('bitcoin-cli -regtest ' + line);
+  const parts = line.trim().split(/\s+/);
+  const cmd = parts[0];
+  const args = parts.slice(1);
+  if (!cmd) return;
+  if (!rpc[cmd]) {
+    consoleWrite('error: unknown command "' + cmd + '" (try "help")', 'err');
+    return;
+  }
+  try {
+    const result = await rpc[cmd](args);
+    if (result !== null && result !== undefined) consoleWrite(result, 'out');
+  } catch (e) {
+    consoleWrite('error: ' + e.message, 'err');
+  }
+}
+
+$('#console-input').addEventListener('keydown', async (e) => {
+  if (e.key === 'Enter') {
+    const v = e.target.value.trim();
+    if (!v) return;
+    consoleHistory.push(v);
+    historyIdx = consoleHistory.length;
+    e.target.value = '';
+    await runRpc(v);
+  } else if (e.key === 'ArrowUp') {
+    if (historyIdx > 0) { historyIdx--; e.target.value = consoleHistory[historyIdx]; }
+    e.preventDefault();
+  } else if (e.key === 'ArrowDown') {
+    if (historyIdx < consoleHistory.length - 1) { historyIdx++; e.target.value = consoleHistory[historyIdx]; }
+    else { historyIdx = consoleHistory.length; e.target.value = ''; }
+    e.preventDefault();
+  }
+});
+
+$$('.help-pill').forEach(p => p.onclick = async () => {
+  $('#console-input').value = p.dataset.cmd;
+  $('#console-input').focus();
+});
+
+// boot console
+consoleWrite('Bitcoin Core simulator · regtest mode · type "help"', 'note');
+consoleWrite('', 'note');
+
+/* ==============================================================
+   Tutorial — live hash demo + mining attempts demo
+   ============================================================== */
+const enc = new TextEncoder();
+function updateHashDemo() {
+  const v = $('#hash-input').value;
+  $('#hash-output').textContent = toHex(sha256(enc.encode(v)));
+}
+$('#hash-input').addEventListener('input', updateHashDemo);
+updateHashDemo();
+
+(function generateMiningExample() {
+  const base = 'block-header-bytes:nonce=';
+  const target = '0000';
+  const out = $('#mining-example');
+  let html = '';
+  let nonce = 1;
+  let shown = 0;
+  while (shown < 5) {
+    const hash = toHex(sha256(enc.encode(base + nonce)));
+    html += `<div class="att-row fail"><span class="nonce-col">nonce=${nonce}</span><span class="x">✗</span><span>hash = ${hash.slice(0, 20)}…</span></div>`;
+    nonce++;
+    shown++;
+  }
+  html += `<div class="att-row fail"><span class="nonce-col">…</span><span class="x"></span><span style="color: var(--text-dim);">(thousands of failed attempts)</span></div>`;
+  while (true) {
+    const hash = toHex(sha256(enc.encode(base + nonce)));
+    if (hash.startsWith(target)) {
+      html += `<div class="att-row win"><span class="nonce-col">nonce=${nonce}</span><span class="x">✓</span><span>hash = <span style="color: var(--green);">${target}</span><span style="color: var(--text-muted);">${hash.slice(target.length, 20)}</span>… &nbsp;starts with ${target} — valid!</span></div>`;
+      break;
+    }
+    nonce++;
+    if (nonce > 1000000) break;
+  }
+  out.innerHTML = html;
+})();
+
+/* ==============================================================
+   Reorg demo (sandboxed — independent of main chain)
+   ============================================================== */
+const reorg = {
+  splitHash: null,
+  splitHeight: 100, // pretend we forked at block 100 of some chain
+  chainA: [],
+  chainB: [],
+  resolved: false,
+};
+
+function reorgInit() {
+  reorg.splitHash = '0000' + randHex(28);
+  reorg.chainA = [];
+  reorg.chainB = [];
+  reorg.resolved = false;
+}
+
+function reorgMineSide(side) {
+  if (reorg.resolved) { toast('Demo is resolved — click Reset to play again', 'info'); return; }
+  const chain = side === 'a' ? reorg.chainA : reorg.chainB;
+  const prevHash = chain.length === 0 ? reorg.splitHash : chain[chain.length - 1].hash;
+  const prevHeight = chain.length === 0 ? reorg.splitHeight : chain[chain.length - 1].height;
+
+  // Mine a real block at low difficulty — fast but real PoW
+  const target = '00';
+  let nonce = 0;
+  const merkleRoot = randHex(32);
+  const time = Math.floor(Date.now() / 1000);
+  while (true) {
+    const header = buildHeader({ version: 0x20000000, prevHash, merkleRoot, time, bits: 0x207fffff, nonce });
+    const hash = hashHeader(header);
+    if (hash.startsWith(target)) {
+      chain.push({ height: prevHeight + 1, hash, prevHash, nonce, side });
+      break;
+    }
+    nonce++;
+    if (nonce > 100000) break;
+  }
+  renderReorg();
+}
+
+function reorgResolve() {
+  if (reorg.chainA.length === 0 && reorg.chainB.length === 0) { toast('Mine some blocks first', 'error'); return; }
+  if (reorg.chainA.length === reorg.chainB.length) { toast('Chains are tied — mine more on one side to break the tie', 'error'); return; }
+  reorg.resolved = true;
+  renderReorg();
+}
+
+function renderReorgStrip(targetId, chain, isOrphaned) {
+  const el = $(targetId);
+  el.innerHTML = '';
+  const split = document.createElement('div');
+  split.className = 'chain-block genesis';
+  split.innerHTML = `<div class="height">split #${reorg.splitHeight}</div><div class="hash-short">${reorg.splitHash.slice(0,10)}…</div><div class="tx-count">shared base</div>`;
+  el.appendChild(split);
+  for (const b of chain) {
+    const arrow = document.createElement('div');
+    arrow.className = 'chain-arrow';
+    arrow.textContent = '→';
+    el.appendChild(arrow);
+    const div = document.createElement('div');
+    div.className = 'chain-block' + (isOrphaned ? ' orphan' : '');
+    div.innerHTML = `<div class="height">#${b.height}</div><div class="hash-short">${b.hash.slice(0,10)}…</div><div class="tx-count">nonce ${b.nonce}</div>`;
+    el.appendChild(div);
+  }
+}
+
+function renderReorg() {
+  $('#chain-a-height').textContent = reorg.chainA.length;
+  $('#chain-b-height').textContent = reorg.chainB.length;
+  $('#chain-a-tip').textContent = reorg.chainA.length ? reorg.chainA[reorg.chainA.length-1].hash.slice(0,12)+'…' : '(split point)';
+  $('#chain-b-tip').textContent = reorg.chainB.length ? reorg.chainB[reorg.chainB.length-1].hash.slice(0,12)+'…' : '(split point)';
+
+  let winner = null;
+  if (reorg.chainA.length > reorg.chainB.length) winner = 'a';
+  else if (reorg.chainB.length > reorg.chainA.length) winner = 'b';
+
+  const aCard = $('#chain-a-card'), bCard = $('#chain-b-card');
+  aCard.classList.remove('winner', 'orphaned');
+  bCard.classList.remove('winner', 'orphaned');
+  if (reorg.resolved && winner) {
+    if (winner === 'a') { aCard.classList.add('winner'); bCard.classList.add('orphaned'); }
+    else { bCard.classList.add('winner'); aCard.classList.add('orphaned'); }
+  }
+
+  renderReorgStrip('#chain-a-strip', reorg.chainA, reorg.resolved && winner === 'b');
+  renderReorgStrip('#chain-b-strip', reorg.chainB, reorg.resolved && winner === 'a');
+
+  const status = $('#reorg-status');
+  status.classList.remove('tied', 'leading', 'resolved');
+  if (reorg.resolved) {
+    status.classList.add('resolved');
+    const w = winner === 'a' ? 'A' : 'B';
+    const l = winner === 'a' ? 'B' : 'A';
+    const lostBlocks = winner === 'a' ? reorg.chainB.length : reorg.chainA.length;
+    const wonBlocks = winner === 'a' ? reorg.chainA.length : reorg.chainB.length;
+    status.innerHTML =
+      `<div style="color: var(--green); font-weight: 700; margin-bottom: 8px;">✓ Chain ${w} wins (${wonBlocks} blocks). It is now the canonical chain.</div>` +
+      `<div style="color: var(--red);">✗ Chain ${l}'s ${lostBlocks} block${lostBlocks!==1?'s':''} are orphaned.</div>` +
+      `<div style="color: var(--text-muted); margin-top: 8px;">Their transactions return to the mempool to be re-mined into future blocks. The miner${lostBlocks!==1?'s':''} who mined those orphaned blocks lose the coinbase reward — it was never canonical.</div>`;
+  } else if (reorg.chainA.length === 0 && reorg.chainB.length === 0) {
+    status.classList.add('tied');
+    status.textContent = 'No blocks mined yet — click "Mine on Chain A" or "Mine on Chain B" to start the competition.';
+  } else if (reorg.chainA.length === reorg.chainB.length) {
+    status.classList.add('tied');
+    status.innerHTML = `<b>Tied</b> at ${reorg.chainA.length} block${reorg.chainA.length!==1?'s each':''}. Mine more on one side to break ahead, then click <b>Resolve fork</b>.`;
+  } else {
+    status.classList.add('leading');
+    const longer = reorg.chainA.length > reorg.chainB.length ? 'A' : 'B';
+    status.innerHTML = `<b>Chain ${longer}</b> is currently longer (${Math.max(reorg.chainA.length, reorg.chainB.length)} vs ${Math.min(reorg.chainA.length, reorg.chainB.length)}). Click <b>Resolve fork</b> to apply the longest-chain rule, or keep mining to deepen the lead.`;
+  }
+
+  $('#btn-mine-a').disabled = reorg.resolved;
+  $('#btn-mine-b').disabled = reorg.resolved;
+}
+
+function reorgReset() {
+  reorgInit();
+  renderReorg();
+  toast('Reorg demo reset');
+}
+
+/* ==============================================================
+   Boot
+   ============================================================== */
+// Theme toggle — label shows the theme you'd switch TO
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  $('#btn-theme').textContent = theme === 'light' ? 'dark' : 'light';
+  $('#btn-theme').title = theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+  try { localStorage.setItem('bitcoin-play-theme', theme); } catch (e) {}
+}
+$('#btn-theme').onclick = () => {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+};
+applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+
+$('#btn-reset').onclick = resetState;
+$('#btn-export').onclick = exportState;
+$('#btn-import').onclick = () => $('#import-file').click();
+$('#import-file').onchange = (e) => {
+  const file = e.target.files[0];
+  if (file) importStateFromFile(file);
+  e.target.value = '';  // allow re-importing the same file
+};
+$('#btn-mine-a').onclick = () => reorgMineSide('a');
+$('#btn-mine-b').onclick = () => reorgMineSide('b');
+$('#btn-resolve').onclick = reorgResolve;
+$('#btn-reorg-reset').onclick = reorgReset;
+reorgInit();
+renderReorg();
+
+// Load saved state from localStorage if present, otherwise start with genesis
+if (!loadState()) state.chain.push(makeGenesis());
+$('#difficulty').value = state.difficulty;
+$('#difficulty-label').textContent = state.difficulty + ' zeros';
+$('#target-display').textContent = '0'.repeat(state.difficulty);
+// Build the first candidate (paying coinbase to first address — generates one if needed)
+prepareTemplate(ensureMiningAddress());
+renderAll();
+</script>
+</body>
+</html>
