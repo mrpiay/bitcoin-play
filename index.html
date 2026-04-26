@@ -1231,7 +1231,7 @@ address:       bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4</pre>
         <p>Account-balance chains (Ethereum, most others) made the opposite tradeoff: simpler programming model, more expressive smart contracts, but global state that has to be carefully sequenced and locked.</p>
       </details>
       <p>So when a wallet UI shows "Balance: 2.5 BTC", it's the wallet doing arithmetic on UTXOs the user controls. Bitcoin itself doesn't know about Alice. It knows about UTXO <code>abc123:0</code> (locked to a specific hash), UTXO <code>def456:1</code> (locked to a different hash), and so on. Alice happens to have the private keys that can sign for both.</p>
-      <p>This is also why **UTXO selection is a real subfield**: which UTXOs should a wallet pick when you want to send X BTC? Smallest first (avoids leaving "dust")? Largest first (fewer inputs, smaller tx, lower fee)? Minimize change? Privacy-aware (don't combine UTXOs from different addresses, since that links them)? Every serious wallet has its own algorithm.</p>
+      <p>This is also why <strong>UTXO selection is a real subfield</strong>: which UTXOs should a wallet pick when you want to send X BTC? Smallest first (avoids leaving "dust")? Largest first (fewer inputs, smaller tx, lower fee)? Minimize change? Privacy-aware (don't combine UTXOs from different addresses, since that links them)? Every serious wallet has its own algorithm.</p>
       <p>The simulator uses a balance model because tracking UTXOs would 5× the wallet complexity for limited educational gain at this level. But every real Bitcoin wallet, every block explorer, every Lightning node, every exchange's hot wallet — they're all built around the UTXO set.</p>
       <div class="try-it">
         <span class="icon">📦</span>
