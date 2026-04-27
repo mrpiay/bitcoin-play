@@ -64,6 +64,7 @@ The folder name is on theme — in Bitcoin you can't fake having done the work, 
    git checkout upstream/main -- docs/<file>
    git commit -m "Sync <file> from upstream"
    ```
+6. **Get listed.** Once you've completed any phase, open a small PR adding your fork to the [Completions roster](https://github.com/mrpiay-lab/bitcoin-play-engineer#completions) on `bitcoin-play-engineer`. The bar is concrete protocol-checkable evidence in your `proof-of-work/` folder — not a green checkmark.
 
 The end result is a public, GitHub-pinnable portfolio of what you actually did — not a screenshot of a green checkmark.
 
