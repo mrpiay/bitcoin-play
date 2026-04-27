@@ -45,7 +45,27 @@ Each phase produces concrete artifacts the protocol either accepts or rejects �
 
 [**bitcoin-play-engineer**](https://github.com/mrpiay-lab/bitcoin-play-engineer) is a companion repo where I'm completing the learning path publicly, capturing commands, outputs, artifacts, and short reflections in a top-level [`proof-of-work/`](https://github.com/mrpiay-lab/bitcoin-play-engineer/tree/main/proof-of-work) folder. Use it as a reference for what a completed phase entry can look like.
 
-To build your own evidence: fork [bitcoin-play](https://github.com/mrpiay/bitcoin-play), add your own `proof-of-work/` folder, and document each phase as you complete it. The folder name is on theme — in Bitcoin you can't fake having done the work, the chain proves it. Same idea here.
+The folder name is on theme — in Bitcoin you can't fake having done the work, the chain proves it. Same idea here.
+
+### How to start your own
+
+1. **Fork this repo on GitHub** to your own account. If you'd rather keep evidence in a separate namespace — or if you happen to already own a `bitcoin-play` fork — fork to an organization you own. (That's how [`mrpiay-lab/bitcoin-play-engineer`](https://github.com/mrpiay-lab/bitcoin-play-engineer) was done.)
+2. **Clone your fork** and add upstream as a remote so you can pull in future doc rewrites:
+   ```bash
+   git clone https://github.com/<you>/bitcoin-play.git
+   cd bitcoin-play
+   git remote add upstream https://github.com/mrpiay/bitcoin-play.git
+   ```
+3. **Create a top-level `proof-of-work/` folder** with one markdown file per phase. See the [reference layout](https://github.com/mrpiay-lab/bitcoin-play-engineer/tree/main/proof-of-work) for the per-phase template.
+4. **Document each phase as you complete it** — what you did, commands and outputs, artifacts (raw hex, txids, block hashes, screenshots), and a short reflection. Commit and push.
+5. **Sync upstream doc rewrites without trampling your evidence:**
+   ```bash
+   git fetch upstream
+   git checkout upstream/main -- docs/<file>
+   git commit -m "Sync <file> from upstream"
+   ```
+
+The end result is a public, GitHub-pinnable portfolio of what you actually did — not a screenshot of a green checkmark.
 
 ## Realistic pacing
 
