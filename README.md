@@ -2,7 +2,11 @@
 
 A hands-on learning path that takes you from "I get the gist of Bitcoin" to "I can build, sign, and broadcast non-trivial transactions against a real node, and explain every byte."
 
-It comes in two halves.
+The path comes in two halves, plus a public model for showing you completed it:
+
+- **[Half 1 — Build intuition](#half-1--build-intuition-browser-no-install)** — an in-browser Bitcoin simulator. Real SHA-256 mining, no install.
+- **[Half 2 — Build capability](#half-2--build-capability-terminal-real-tools)** — engineering docs against rawBit + a real local `bitcoind` stack on regtest. Seven phases.
+- **[Show evidence of completing the learning path](#show-evidence-of-completing-the-learning-path)** — fork this repo, journal each phase in a `proof-of-work/` folder, get listed in the Completions roster.
 
 ## Half 1 — Build intuition (browser, no install)
 
@@ -41,11 +45,9 @@ The phase docs walk you from your first hand-built transaction through smart con
 
 ## Show evidence of completing the learning path
 
-Each phase produces concrete artifacts the protocol either accepts or rejects — raw transactions, txids, block hashes, Script execution traces. Captured together as you progress, they become **evidence of completing the learning path**: a portfolio you can share, point an employer at, or revisit when you forget how something worked.
+Each phase produces concrete artifacts the protocol either accepts or rejects — raw transactions, txids, block hashes, Script execution traces. Captured in a top-level **`proof-of-work/`** folder of your own fork, with one markdown file per phase, they become **evidence of completing the learning path**: a portfolio you can share, point an employer at, or revisit when you forget how something worked. The folder name is on theme — in Bitcoin you can't fake having done the work, the chain proves it.
 
-[**bitcoin-play-engineer**](https://github.com/mrpiay-lab/bitcoin-play-engineer) is a companion repo where I'm completing the learning path publicly, capturing commands, outputs, artifacts, and short reflections in a top-level [`proof-of-work/`](https://github.com/mrpiay-lab/bitcoin-play-engineer/tree/main/proof-of-work) folder. Use it as a reference for what a completed phase entry can look like.
-
-The folder name is on theme — in Bitcoin you can't fake having done the work, the chain proves it. Same idea here.
+[**bitcoin-play-engineer**](https://github.com/mrpiay-lab/bitcoin-play-engineer) is my fork where I'm completing the path publicly, with each phase's entry in [`proof-of-work/`](https://github.com/mrpiay-lab/bitcoin-play-engineer/tree/main/proof-of-work). Use it as a reference for what a completed phase entry can look like.
 
 ### How to start your own
 
@@ -64,9 +66,7 @@ The folder name is on theme — in Bitcoin you can't fake having done the work, 
    git checkout upstream/main -- docs/<file>
    git commit -m "Sync <file> from upstream"
    ```
-6. **Get listed.** Once you've completed any phase, open a small PR adding your fork to the [Completions roster](https://github.com/mrpiay-lab/bitcoin-play-engineer#completions) on `bitcoin-play-engineer`. The bar is concrete protocol-checkable evidence in your `proof-of-work/` folder — not a green checkmark.
-
-The end result is a public, GitHub-pinnable portfolio of what you actually did — not a screenshot of a green checkmark.
+6. **Get listed.** Once you've completed any phase, open a small PR adding your fork to the [Completions roster](https://github.com/mrpiay-lab/bitcoin-play-engineer#completions) on `bitcoin-play-engineer`. The bar is concrete protocol-checkable evidence in your `proof-of-work/` folder — not a screenshot of a green checkmark.
 
 ## Realistic pacing
 
