@@ -37,13 +37,13 @@ The phase docs walk you from your first hand-built transaction through smart con
 | Phase 5 — External view (wallets + APIs) | [docs/07-phase5-wallets-apis.md](docs/07-phase5-wallets-apis.md) |
 | Phase 6 — Multi-node and real reorgs | [docs/08-phase6-multinode-reorgs.md](docs/08-phase6-multinode-reorgs.md) |
 | Phase 7 — Capstone | [docs/09-phase7-capstone.md](docs/09-phase7-capstone.md) |
-| Reference shelf + pacing | [reference.md](reference.md) |
+| Reference shelf | [reference.md](reference.md) |
 
 ## Show evidence of completing the learning path
 
 Each phase produces concrete artifacts the protocol either accepts or rejects — raw transactions, txids, block hashes, Script execution traces. Captured together as you progress, they become **evidence of completing the learning path**: a portfolio you can share, point an employer at, or revisit when you forget how something worked.
 
-[**bitcoin-play-engineer**](https://github.com/mrpiay/bitcoin-play-engineer) is a companion repo where I'm completing the learning path publicly, capturing commands, outputs, artifacts, and short reflections in a top-level [`proof-of-work/`](https://github.com/mrpiay/bitcoin-play-engineer/tree/main/proof-of-work) folder. Use it as a reference for what a completed phase entry can look like.
+[**bitcoin-play-engineer**](https://github.com/mrpiay-lab/bitcoin-play-engineer) is a companion repo where I'm completing the learning path publicly, capturing commands, outputs, artifacts, and short reflections in a top-level [`proof-of-work/`](https://github.com/mrpiay-lab/bitcoin-play-engineer/tree/main/proof-of-work) folder. Use it as a reference for what a completed phase entry can look like.
 
 To build your own evidence: fork [bitcoin-play](https://github.com/mrpiay/bitcoin-play), add your own `proof-of-work/` folder, and document each phase as you complete it. The folder name is on theme — in Bitcoin you can't fake having done the work, the chain proves it. Same idea here.
 
