@@ -155,6 +155,49 @@ Try these without looking back. If any feel shaky, return to the relevant rawBit
 
 Phase 2 leans heavily on these mental models — it's worth the extra session if you're not solid yet.
 
+## Verification
+
+The whole point of this path is that your evidence is checkable — not a green checkmark that nobody can verify. Phase 1's machine-checkable evidence is the three transaction-hex artifacts (P2PKH, P2WPKH, P2TR). Two checks cover the vast majority of what can go wrong; both run via [`scripts/verify-tx.py`](../scripts/verify-tx.py) (a small Python helper using `python-bitcointx`, already installed by rawBit).
+
+### Check 1 — The hex parses as a valid Bitcoin transaction
+
+**Criterion:** the hex string deserializes into a `CTransaction` without error and reports sane field counts.
+
+```bash
+python3 scripts/verify-tx.py --hex "$YOUR_HEX"
+```
+
+**Pass:** `[PASS] Tx parses. txid=<hash>, <N> input(s), <M> output(s), version=<v>, locktime=<n>`
+**Fail:** `[FAIL] hex doesn't parse: ...` — usually trailing whitespace, a truncated copy, or the hex isn't a serialized tx at all.
+
+### Check 2 — At least one output's type matches your label
+
+**Criterion:** when you label a tx P2PKH, P2WPKH, or P2TR, the actual `scriptPubKey` shape of at least one output must match.
+
+```bash
+python3 scripts/verify-tx.py --hex "$YOUR_HEX" --expected-type p2pkh
+```
+
+The script identifies output types by their `scriptPubKey` bytes:
+- **P2PKH** — `OP_DUP OP_HASH160 <20 bytes> OP_EQUALVERIFY OP_CHECKSIG`
+- **P2SH** — `OP_HASH160 <20 bytes> OP_EQUAL`
+- **P2WPKH** — `OP_0 <20 bytes>`
+- **P2WSH** — `OP_0 <32 bytes>`
+- **P2TR** — `OP_1 <32 bytes>`
+
+**Pass:** at least one output of the expected type.
+**Fail:** no output of that type — your label and your data disagree. Common cause: copied a hex from one example and a label from another.
+
+### Manually verified parts
+
+These can't be fully automated; they're peer- or self-reviewed against the criteria:
+
+- **Byte-level breakdown** — should account for `version`, `vin` (with prevout, scriptSig, sequence per input), `vout` (with amount and scriptPubKey per output), `locktime`, and (for SegWit) `witness`. The decoder confirms structural completeness; the correctness of your prose explanations needs human review.
+- **Script execution trace** — visual artifact. Criterion: the trace shows stack state at every opcode and ends with `1` on top of stack for a valid spend. Anything else would be rejected by a real node.
+- **Personal opcode reference** — should cover at minimum `OP_DUP`, `OP_HASH160`, `OP_EQUAL`/`OP_EQUALVERIFY`, `OP_CHECKSIG`, `OP_0`, `OP_1`. Mechanical check: each opcode mentioned by name. Quality check: human review.
+
+The mechanical checks make your artifacts legible to anyone who wants to verify them. The manual ones are where understanding shows. Both matter for a real completion.
+
 ## Bailout point
 
 If you only do Phase 1 and stop here, you already know more about Bitcoin transactions than 95% of self-described "Bitcoiners." This phase alone is worth the time.
