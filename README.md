@@ -1,25 +1,33 @@
 # bitcoin-play
 
-A staged, hands-on path to go from "I understand the concepts" to "I can build, sign, and broadcast non-trivial Bitcoin transactions against a real node, and explain every byte."
+A hands-on learning path that takes you from "I get the gist of Bitcoin" to "I can build, sign, and broadcast non-trivial transactions against a real node, and explain every byte."
 
-Built on three tools, each covering one level:
+It comes in two halves.
 
-| Level | Tool | Teaches |
-|---|---|---|
-| **0. Concepts** | [`index.html`](./index.html) (this repo) | Hashing, mining, blocks, chain, mempool — the abstract mechanics |
-| **1. Transaction anatomy** | [rawBit](https://github.com/rawBit-io/rawbit) | Inputs, outputs, witness, Script, signatures — what's *inside* a tx, byte by byte |
-| **2. Full real stack** | [Podman Regtest Infinity Pro](https://github.com/thunderbiscuit/podman-regtest-infinity-pro) | Real `bitcoind` + Electrum + Esplora + explorer, all local |
+## Half 1 — Build intuition (browser, no install)
 
-The progression matters: jumping into `bitcoin-cli sendrawtransaction` without first understanding what's *in* a transaction leaves you operating on faith. rawBit closes that gap. Infinity Pro then lets you exercise the knowledge against a real node.
+**[Open the simulator →](https://mrpiay.github.io/bitcoin-play/)**
 
-## Start here
+A browser-only Bitcoin sandbox. Real SHA-256 mining, real header structure, real proof-of-work — but with addresses, UTXOs, and Script scaffolded so the *mechanics* stay visible. Watch a nonce search find a valid block, build transactions and see them sit in the mempool, trigger a reorg between two chains and watch the longest one win.
 
-1. Open [`index.html`](./index.html) in a browser and play with the simulator until mining, mempool flow, and chain extension feel familiar. (Phase 0 — concepts.)
-2. Then walk through the docs in order:
+Use it to internalize what mining, the mempool, and chain extension *feel like* before you ever touch a terminal. An afternoon here pays for itself many times over.
+
+## Half 2 — Build capability (terminal, real tools)
+
+Once intuition clicks, the engineering path picks up where the simulator leaves off. Two external tools do most of the work:
+
+| Tool | What it teaches |
+|---|---|
+| [rawBit](https://github.com/rawBit-io/rawbit) | What's actually inside a transaction — inputs, outputs, witness, Script, signatures, byte by byte |
+| [Podman Regtest Infinity Pro](https://github.com/thunderbiscuit/podman-regtest-infinity-pro) | A full local stack: real `bitcoind` + Electrum + Esplora + block explorer, all on regtest |
+
+The phase docs walk you from your first hand-built transaction through smart contracts, multi-node networking, and a capstone project.
+
+**Start here:** [docs/00-intro.md](docs/00-intro.md) — what you'll be able to do, why the path is staged this way, bailout points, and the toolchain setup.
 
 | Step | Doc |
 |---|---|
-| Prerequisites (WSL, toolchain) | [docs/00-prerequisites.md](docs/00-prerequisites.md) |
+| Introduction & prerequisites | [docs/00-intro.md](docs/00-intro.md) |
 | Install rawBit | [docs/01-install-rawbit.md](docs/01-install-rawbit.md) |
 | Install Podman Regtest Infinity Pro | [docs/02-install-infinity-pro.md](docs/02-install-infinity-pro.md) |
 | Phase 1 — Transaction anatomy | [docs/03-phase1-tx-anatomy.md](docs/03-phase1-tx-anatomy.md) |
@@ -33,7 +41,9 @@ The progression matters: jumping into `bitcoin-cli sendrawtransaction` without f
 
 ## Realistic pacing
 
-At ~5 hours/week, the whole path takes about 2–3 months. See [reference.md](reference.md) for a per-phase breakdown. After that you can read most Bitcoin codebases without flailing and write meaningful code against the protocol.
+At ~5 hours/week, the engineering path takes about 2–3 months. See [reference.md](reference.md) for a per-phase breakdown. The simulator on its own takes anywhere from an afternoon to a few days, depending on how curious you get.
+
+After both halves, you can read most Bitcoin codebases without flailing and write meaningful code against the protocol.
 
 ## License
 

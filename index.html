@@ -805,6 +805,16 @@
     <p class="small" style="margin-top: 16px; color: var(--text-dim);">New to Bitcoin? <b>Tutorial</b> covers the concepts (10 chapters with live SHA-256 demos). <b>Practice Guide</b> covers what you'd actually do in real life (wallets, fees, security). The simulator tabs let you experiment with mining, transactions, and reorgs hands-on.</p>
   </div>
 
+  <div class="card" style="margin: 24px 0 0;">
+    <h3>Where this fits</h3>
+    <p style="color: var(--text-muted); margin: 0 0 12px;">
+      This page is the <strong style="color: var(--text);">browser-only intuition layer</strong> of <a href="https://github.com/mrpiay/bitcoin-play" target="_blank" rel="noopener">bitcoin-play</a> — a hands-on learning path that ends with you reading raw transaction hex and driving a real <code>bitcoind</code> node on regtest.
+    </p>
+    <p style="color: var(--text-muted); margin: 0;">
+      Play here until mining, the mempool, and chain extension feel obvious. When you want to graduate from <em>watching</em> mechanics to <em>handling bytes</em>, the <a href="https://github.com/mrpiay/bitcoin-play/blob/main/docs/00-intro.md" target="_blank" rel="noopener">engineering docs</a> pick up where this leaves off.
+    </p>
+  </div>
+
   <div class="network-grid">
     <div class="network-card">
       <span class="tag real">MAINNET</span>
@@ -870,6 +880,21 @@
     </ul>
     <p class="small" style="margin: 14px 0 0; color: var(--text-dim);">
       The exported JSON is plain text and human-readable — you can open it in any editor. Storage is per-browser-per-origin, so opening this page in a different browser or in incognito starts fresh.
+    </p>
+  </div>
+
+  <div class="card" style="margin-top: 32px;">
+    <h3>When you've outgrown the simulator</h3>
+    <p style="color: var(--text-muted); margin: 0 0 12px;">
+      The simulator has done its job when you can predict what it will do before clicking. A few signals tell you it's time to move on:
+    </p>
+    <ul style="color: var(--text-muted); padding-left: 20px; line-height: 1.9; font-size: 14px; margin: 0 0 14px;">
+      <li>You're more curious about <em>the bytes inside a transaction</em> than the visualization on screen.</li>
+      <li>"Address" and "balance" feel limiting — you want to see UTXOs, scriptPubKeys, witness stacks.</li>
+      <li>You want to write code that produces a transaction a real node will accept.</li>
+    </ul>
+    <p style="color: var(--text-muted); margin: 0;">
+      That's where the <a href="https://github.com/mrpiay/bitcoin-play/blob/main/docs/00-intro.md" target="_blank" rel="noopener">bitcoin-play engineering docs</a> take over: <a href="https://github.com/rawBit-io/rawbit" target="_blank" rel="noopener">rawBit</a> for transaction anatomy and Script execution, <a href="https://github.com/thunderbiscuit/podman-regtest-infinity-pro" target="_blank" rel="noopener">Podman Regtest Infinity Pro</a> for a real local <code>bitcoind</code> + Electrum + Esplora stack, then a phased path through smart contracts, multi-node networking, and a capstone.
     </p>
   </div>
 </section>

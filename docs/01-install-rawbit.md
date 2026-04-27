@@ -1,6 +1,6 @@
 # Install rawBit
 
-> [← Prerequisites](00-prerequisites.md) · [README](../README.md) · [Install Infinity Pro →](02-install-infinity-pro.md)
+> [← Introduction](00-intro.md) · [README](../README.md) · [Install Infinity Pro →](02-install-infinity-pro.md)
 
 [rawBit](https://github.com/rawBit-io/rawbit) is a frontend (React + Vite) and a backend (Flask + Python with the `python-bitcointx` fork). It teaches transaction anatomy with a step-through Script debugger.
 
@@ -57,4 +57,4 @@ If you get blocked entirely, the hosted version at <https://rawbit.io/> works fo
 
 ---
 
-[← Prerequisites](00-prerequisites.md) · [README](../README.md) · [Install Infinity Pro →](02-install-infinity-pro.md)
+[← Introduction](00-intro.md) · [README](../README.md) · [Install Infinity Pro →](02-install-infinity-pro.md)
