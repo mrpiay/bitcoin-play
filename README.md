@@ -49,6 +49,12 @@ Each phase produces concrete artifacts the protocol either accepts or rejects �
 
 [**bitcoin-play-engineer**](https://github.com/mrpiay-lab/bitcoin-play-engineer) is my fork where I'm completing the path publicly, with each phase's entry in [`proof-of-work/`](https://github.com/mrpiay-lab/bitcoin-play-engineer/tree/main/proof-of-work). Use it as a reference for what a completed phase entry can look like.
 
+### The evidence is mechanically checkable
+
+Each phase doc has a **Verification** section defining per-artifact criteria + runnable check commands. Phase 1 ships [`scripts/verify-tx.py`](scripts/verify-tx.py): feed it a transaction hex and it tells you whether the bytes parse as a valid Bitcoin tx and whether the output type matches your label. Pass/fail is deterministic — you, your reader, and any future verifier all run the same check and get the same answer. Later phases add checks against a real `bitcoind` (Phase 3+) and against multisig / timelock / reorg behaviour (Phases 4 and 6).
+
+That's the difference between this and a green checkmark: the artifacts and the verification are public, runnable, and reproducible.
+
 ### How to start your own
 
 1. **Fork this repo on GitHub** to your own account. If you'd rather keep evidence in a separate namespace — or if you happen to already own a `bitcoin-play` fork — fork to an organization you own. (That's how [`mrpiay-lab/bitcoin-play-engineer`](https://github.com/mrpiay-lab/bitcoin-play-engineer) was done.)
@@ -59,7 +65,7 @@ Each phase produces concrete artifacts the protocol either accepts or rejects �
    git remote add upstream https://github.com/mrpiay/bitcoin-play.git
    ```
 3. **Create a top-level `proof-of-work/` folder** with one markdown file per phase. See the [reference layout](https://github.com/mrpiay-lab/bitcoin-play-engineer/tree/main/proof-of-work) for the per-phase template.
-4. **Document each phase as you complete it** — what you did, commands and outputs, artifacts (raw hex, txids, block hashes, screenshots), and a short reflection. Commit and push.
+4. **Document each phase as you complete it** — what you did, commands and outputs, artifacts (raw hex, txids, block hashes, screenshots), and a short reflection. Run the phase's Verification checks against your artifacts and paste the pass/fail output into your entry. Commit and push.
 5. **Sync upstream doc rewrites.** When new phase docs land in upstream `bitcoin-play`:
    - **Most learners (vanilla fork):** click **"Sync fork"** on your fork's GitHub page, or run `git pull upstream main` locally. Works as long as you haven't modified upstream files; the new `proof-of-work/` content doesn't conflict.
    - **If you've customized upstream files** (e.g., personalized the README): pull selectively instead of merging the whole branch.
