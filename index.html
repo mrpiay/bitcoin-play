@@ -69,9 +69,6 @@
   }
 
   /* Dark code blocks: re-vivify the brand colors locally so they stay readable */
-  [data-theme="light"] .terminal,
-  [data-theme="light"] .console,
-  [data-theme="light"] .console-input-wrap,
   [data-theme="light"] .nonce-display,
   [data-theme="light"] .hash-bar,
   [data-theme="light"] .attempts,
@@ -129,19 +126,6 @@
   .header-title h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
   .header-title .sub { font-size: 11px; color: var(--text-muted); font-family: var(--mono); }
   .header-spacer { flex: 1; }
-  .badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 4px 10px; border-radius: 999px;
-    font-size: 11px; font-weight: 600; font-family: var(--mono);
-    background: var(--green-soft); color: var(--green);
-    border: 1px solid rgba(74, 222, 128, 0.3);
-  }
-  .badge::before {
-    content: ""; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--green); box-shadow: 0 0 8px var(--green);
-    animation: pulse 2s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   .stats-mini { display: flex; gap: 14px; font-family: var(--mono); font-size: 12px; }
   .stats-mini span { color: var(--text-muted); }
   .stats-mini b { color: var(--text); font-weight: 600; }
@@ -157,14 +141,14 @@
   .nav button {
     background: none; border: none;
     color: var(--text-muted);
-    padding: 14px 16px;
+    padding: 14px 10px;
     font-size: 13px; font-weight: 500;
     font-family: inherit;
     cursor: pointer;
     border-bottom: 2px solid transparent;
     transition: all 0.15s ease;
     white-space: nowrap;
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 6px;
   }
   .nav button:hover { color: var(--text); }
   .nav button.active {
@@ -247,30 +231,6 @@
   input:focus, select:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-glow); }
   label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); display: block; margin-bottom: 6px; }
   .form-row { margin-bottom: 14px; }
-
-  /* ============== TERMINAL / CODE ============== */
-  .terminal {
-    background: var(--code-bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    font-family: var(--mono); font-size: 12.5px;
-    line-height: 1.6;
-    color: #d8dde8;
-    overflow-x: auto;
-    position: relative;
-  }
-  .terminal .prompt { color: var(--green); user-select: none; }
-  .terminal .cmd { color: var(--orange-soft); }
-  .terminal .out { color: var(--text-muted); }
-  .terminal .comment { color: var(--text-dim); font-style: italic; }
-  .copy-btn {
-    position: absolute; top: 8px; right: 8px;
-    background: var(--surface-2); border: 1px solid var(--border);
-    color: var(--text-muted); padding: 4px 10px; border-radius: 6px;
-    font-size: 11px; cursor: pointer; font-family: var(--mono);
-  }
-  .copy-btn:hover { color: var(--orange); border-color: var(--orange); }
 
   .key-value { display: grid; grid-template-columns: 160px 1fr; gap: 4px 12px; font-family: var(--mono); font-size: 12.5px; }
   .key-value dt { color: var(--text-muted); }
@@ -493,55 +453,6 @@
   }
   .merkle-row:first-child::before { content: ""; }
 
-  /* ============== RPC CONSOLE ============== */
-  .console {
-    background: var(--code-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 0;
-    overflow: hidden;
-    display: flex; flex-direction: column;
-    height: 520px;
-  }
-  .console-output {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 20px;
-    font-family: var(--mono);
-    font-size: 12.5px;
-    line-height: 1.55;
-  }
-  .console-line { margin-bottom: 4px; white-space: pre-wrap; word-break: break-word; }
-  .console-line.cmd { color: var(--orange-soft); }
-  .console-line.cmd::before { content: "$ "; color: var(--green); }
-  .console-line.out { color: var(--text); }
-  .console-line.err { color: var(--red); }
-  .console-line.note { color: var(--text-dim); font-style: italic; }
-  .console-input-wrap {
-    border-top: 1px solid var(--border);
-    padding: 12px 16px;
-    display: flex; align-items: center; gap: 8px;
-    background: var(--code-bg);
-  }
-  .console-input-wrap .ps { color: var(--green); font-family: var(--mono); white-space: nowrap; flex-shrink: 0; font-size: 13px; }
-  .console-input-wrap input {
-    background: transparent; border: none; color: var(--orange-soft);
-    font-family: var(--mono); font-size: 13px; padding: 4px 0;
-    flex: 1; min-width: 0;
-  }
-  .console-input-wrap input:focus { box-shadow: none; }
-
-  .help-pill {
-    display: inline-block;
-    background: var(--surface-2); border: 1px solid var(--border-strong);
-    color: var(--text-muted);
-    padding: 3px 8px; margin: 2px;
-    border-radius: 4px;
-    font-family: var(--mono); font-size: 11px;
-    cursor: pointer;
-  }
-  .help-pill:hover { color: var(--orange); border-color: var(--orange); }
-
   /* ============== TOAST ============== */
   .toast-stack {
     position: fixed; bottom: 24px; right: 24px;
@@ -722,89 +633,6 @@
   .try-it .icon { font-size: 18px; flex-shrink: 0; }
   .try-it a { color: var(--orange); font-weight: 600; }
 
-  /* ============== COMPARISON ============== */
-  .compare-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 4px;
-  }
-  @media (max-width: 800px) { .compare-grid { grid-template-columns: 1fr; } }
-  .compare-side {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    border-top-width: 3px;
-  }
-  .compare-side.sim { border-top-color: var(--blue); }
-  .compare-side.real { border-top-color: var(--orange); }
-  .compare-side h4 {
-    margin: 0 0 4px;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .compare-side .who {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-bottom: 14px;
-  }
-  .compare-side .compare-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 700;
-    margin-top: 16px;
-    margin-bottom: 8px;
-  }
-  .compare-side .compare-label.good { color: var(--green); }
-  .compare-side .compare-label.bad { color: var(--red); }
-  .compare-side ul {
-    margin: 0;
-    padding-left: 18px;
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.55;
-  }
-  .compare-side ul li { margin-bottom: 5px; }
-  .compare-side ul li strong { color: var(--text); font-weight: 600; }
-  .compare-side ul li code {
-    background: var(--surface-2); padding: 1px 5px; border-radius: 3px;
-    font-size: 12px; color: var(--orange-soft);
-  }
-  .compare-side .when {
-    margin-top: 16px;
-    padding-top: 12px;
-    border-top: 1px dashed var(--border);
-    font-size: 13px;
-    color: var(--text);
-  }
-  .compare-side .when b { color: var(--orange); }
-  .compare-side.sim .when b { color: var(--blue); }
-
-  /* ============== SIM DISCLAIMER FOOTER ============== */
-  .sim-footer {
-    max-width: 1280px;
-    margin: 32px auto 0;
-    padding: 16px 24px;
-    border-top: 1px dashed var(--border);
-    font-size: 11.5px;
-    color: var(--text-dim);
-    line-height: 1.7;
-    text-align: center;
-    font-family: var(--mono);
-  }
-  .sim-footer .label {
-    display: inline-block;
-    padding: 1px 6px; border-radius: 4px;
-    font-weight: 700; letter-spacing: 0.04em;
-    margin: 0 4px;
-  }
-  .sim-footer .label.fake { background: var(--red-soft); color: var(--red); }
-  .sim-footer .label.real { background: var(--green-soft); color: var(--green); }
-
   /* ============== DEEP-DIVE DETAILS ============== */
   .chapter-body details {
     background: var(--bg);
@@ -944,19 +772,16 @@
   <button class="btn ghost" id="btn-import" title="Load playground state from JSON file" style="padding: 6px 10px; font-size: 11px;">↘ import</button>
   <input type="file" id="import-file" accept="application/json,.json" style="display:none;">
   <button class="btn ghost" id="btn-reset" title="Reset everything (clear blocks, wallet, mempool)" style="padding: 6px 10px; font-size: 11px;">↺ reset</button>
-  <span class="badge">REGTEST</span>
 </header>
 
 <nav class="nav" id="nav">
   <button data-section="intro" class="active"><span class="num">00</span> Intro</button>
   <button data-section="tutorial"><span class="num">01</span> How It Works</button>
   <button data-section="practice"><span class="num">02</span> Practice Guide</button>
-  <button data-section="setup"><span class="num">03</span> Setup Guide</button>
-  <button data-section="mining"><span class="num">04</span> Mining Lab</button>
-  <button data-section="wallet"><span class="num">05</span> Wallet &amp; Mempool</button>
-  <button data-section="explorer"><span class="num">06</span> Block Explorer</button>
-  <button data-section="reorg"><span class="num">07</span> Reorg Demo</button>
-  <button data-section="console"><span class="num">08</span> RPC Console</button>
+  <button data-section="mining"><span class="num">03</span> Mining Lab</button>
+  <button data-section="wallet"><span class="num">04</span> Wallet &amp; Mempool</button>
+  <button data-section="explorer"><span class="num">05</span> Block Explorer</button>
+  <button data-section="reorg"><span class="num">06</span> Reorg Demo</button>
 </nav>
 
 <main>
@@ -964,12 +789,13 @@
 <!-- ============== INTRO ============== -->
 <section class="section active" id="section-intro">
   <div class="hero">
-    <h2>Run your own private Bitcoin network.</h2>
+    <h2>A hands-on Bitcoin simulator that runs in your browser.</h2>
     <p class="lede">
-      Bitcoin Core ships with three modes. <b>Mainnet</b> is real money. <b>Testnet</b> uses fake coins on a real public network with real difficulty.
-      <b>Regtest</b> is your own private chain — difficulty pinned to the floor, you're the only miner, blocks confirm instantly.
-      It's the standard environment for Bitcoin development. This page simulates it in your browser so you can see what's actually happening
-      under the hood.
+      Watch real SHA-256 mining find a valid block, build transactions and see them sit in the mempool, follow a chain reorg as it happens.
+      The hashing, header structure, and proof-of-work check are bit-exact to Bitcoin Core; the wallet and networking are simplified scaffolding to make the mechanics visible.
+    </p>
+    <p class="lede" style="margin-top: 12px;">
+      The model is <b>regtest</b> — Bitcoin Core's private development mode where difficulty is trivial and you're the only miner. It's the standard environment Bitcoin developers use to test things, because you can experiment without economic stakes getting in the way of the mechanics.
     </p>
     <div class="actions">
       <button class="btn primary" data-goto="tutorial">Start the tutorial →</button>
@@ -997,6 +823,16 @@
     </div>
   </div>
 
+  <div class="card" style="margin: 24px 0 32px;">
+    <h3>Why regtest is the standard environment for learning</h3>
+    <p style="color: var(--text-muted); margin: 0 0 12px;">
+      On regtest you can break things on purpose. Submit a block with a bad merkle root and read the exact consensus error. Mine 100 blocks in a second. Spin up two nodes and trigger a real chain reorg between them. Wipe the chain and start over. None of this is possible on mainnet because the economic stakes ($) get in the way of the mechanics — and Bitcoin Core developers themselves use regtest to test new features for the same reason.
+    </p>
+    <p class="small" style="margin: 0; color: var(--text-dim);">
+      This page simulates regtest in your browser so you can see those mechanics without installing anything. If you eventually want the real thing — actual signatures, UTXOs, Script execution, multi-node networking — install <a href="https://bitcoincore.org/" target="_blank" rel="noopener">Bitcoin Core</a> and run <code>bitcoind -regtest -daemon</code> (Linux/Mac) or <code>bitcoind.exe -regtest</code> (Windows, foreground). Same code as mainnet, same script and validation rules — with regtest-specific chain parameters (instant difficulty, halving every 150 blocks, sandboxed network magic).
+    </p>
+  </div>
+
   <div class="grid grid-2">
     <div class="card">
       <h3>What you'll see in this simulator</h3>
@@ -1005,7 +841,6 @@
         <li>Block headers serialized exactly as Bitcoin Core does (version, prev hash, merkle root, timestamp, bits, nonce).</li>
         <li>A wallet that holds spendable balance, and a mempool that fills with pending transactions.</li>
         <li>A Merkle tree of transaction hashes, computed live as you build a block.</li>
-        <li>An RPC console that responds to actual <code>bitcoin-cli</code> commands.</li>
       </ul>
     </div>
     <div class="card">
@@ -1042,7 +877,7 @@
 <!-- ============== TUTORIAL ============== -->
 <section class="section" id="section-tutorial">
   <h2>How Bitcoin actually works</h2>
-  <p class="lede">Eight short chapters. Each one explains one concept and points to the part of the simulator where you can see it in action. No prior knowledge assumed.</p>
+  <p class="lede">Ten short chapters. Each one explains one concept and points to the part of the simulator where you can see it in action. No prior knowledge assumed.</p>
 
   <div class="chapter-pills">
     <a href="#ch1" class="chapter-pill">01 · The problem</a>
@@ -1307,7 +1142,7 @@ address:       bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4</pre>
       </div>
       <div class="try-it">
         <span class="icon">⚙</span>
-        <div><strong style="color: var(--orange);">Want to play with the protocol directly?</strong> Jump straight into the simulator tabs: <a href="#" data-goto="mining">Mining Lab</a> for live nonce search, <a href="#" data-goto="wallet">Wallet</a> for transactions and the mempool, <a href="#" data-goto="explorer">Block Explorer</a> for header / merkle / tx inspection, <a href="#" data-goto="reorg">Reorg Demo</a> for forks and the longest-chain rule, <a href="#" data-goto="console">RPC Console</a> for real <code>bitcoin-cli</code> commands. All sandboxed — you can't break anything.</div>
+        <div><strong style="color: var(--orange);">Want to play with the protocol directly?</strong> Jump straight into the simulator tabs: <a href="#" data-goto="mining">Mining Lab</a> for live nonce search, <a href="#" data-goto="wallet">Wallet</a> for transactions and the mempool, <a href="#" data-goto="explorer">Block Explorer</a> for header / merkle / tx inspection, <a href="#" data-goto="reorg">Reorg Demo</a> for forks and the longest-chain rule. All sandboxed — you can't break anything.</div>
       </div>
       <p style="margin-top: 18px;">If you're curious how the simulator works under the hood, view source on this page — everything (HTML, CSS, JavaScript) lives in a single <code>index.html</code> file. The SHA-256 function, block-header serialization, merkle root computation, and proof-of-work check are faithful JavaScript implementations of the same algorithms Bitcoin Core uses in C++.</p>
     </div>
@@ -1452,7 +1287,7 @@ address:       bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4</pre>
       <ul>
         <li><strong>mempool.space</strong> — the most useful explorer for active payments. Shows your tx's mempool position, current fee market, expected confirmation time, RBF status.</li>
         <li><strong>blockstream.info</strong> — clean explorer, also has a Tor onion service for privacy.</li>
-        <li><strong>Your own node</strong> — most private option (no third party sees what you're querying). See the Setup Guide.</li>
+        <li><strong>Your own node</strong> — most private option (no third party sees what you're querying).</li>
       </ul>
       <p>You can search by:</p>
       <ul>
@@ -1513,154 +1348,15 @@ address:       bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4</pre>
     <div class="chapter-body">
       <p>Once the basics are routine, here's what's worth exploring next:</p>
       <ul>
-        <li><strong>Run your own node.</strong> Don't trust anyone's blockchain data — verify it yourself. Bitcoin Core, Umbrel, Start9, MyNode, Raspiblitz make this approachable on a Raspberry Pi or old laptop. See the <a href="#" data-goto="setup">Setup Guide</a> for the development version (regtest); same software, different network flag for mainnet.</li>
+        <li><strong>Run your own node.</strong> Don't trust anyone's blockchain data — verify it yourself. Bitcoin Core, Umbrel, Start9, MyNode, Raspiblitz make this approachable on a Raspberry Pi or old laptop. The same software runs in regtest mode locally for development — same C++, just a network flag away from mainnet.</li>
         <li><strong>Lightning Network.</strong> Bitcoin's layer-2 for instant, cheap (sub-cent) payments. Open a payment channel, transact off-chain at unlimited speed, settle on-chain when you close. Phoenix and Muun are the easiest mobile entry points; LND, CLN, and Eclair are the serious node implementations.</li>
         <li><strong>Privacy tools.</strong> CoinJoin (JoinMarket, Whirlpool, Wabisabi) breaks transaction graph analysis. Lightning + Tor for payment privacy. Coin control in your wallet to avoid linking UTXOs.</li>
-        <li><strong>Build something.</strong> PSBT-based workflows, descriptor wallets, miniscript contracts, BTCPay Server for accepting payments, Lightning APIs for in-app payments. The <a href="#" data-goto="setup">Setup Guide</a> + the <a href="#" data-goto="console">RPC Console</a> are your starting points for development.</li>
+        <li><strong>Build something.</strong> PSBT-based workflows, descriptor wallets, miniscript contracts, BTCPay Server for accepting payments, Lightning APIs for in-app payments. Spin up <code>bitcoind -regtest</code> locally and start scripting against its JSON-RPC.</li>
         <li><strong>Read the source.</strong> Bitcoin Core is ~150k lines of well-documented C++ at <a href="https://github.com/bitcoin/bitcoin" target="_blank" rel="noopener">github.com/bitcoin/bitcoin</a>. The consensus rules in <code>validation.cpp</code> and <code>script/interpreter.cpp</code> are the actual rules of the network. Surprisingly readable.</li>
       </ul>
       <p>Bitcoin is a deep rabbit hole. The basics fit in this guide; the rest is decades of work — cryptography, distributed systems, monetary theory, game theory, hardware engineering. Pick a thread that interests you and pull.</p>
     </div>
   </article>
-</section>
-
-<!-- ============== SETUP ============== -->
-<section class="section" id="section-setup">
-  <h2>Setup guide</h2>
-  <p class="lede">For when you want to do this for real on your own machine. The simulator runs without any of this — but the mechanics are identical.</p>
-
-  <div class="card" style="margin-bottom: 22px;">
-    <h3>Simulator vs. real regtest — when to use which</h3>
-    <p style="color: var(--text-muted); margin: 0 0 18px;">
-      The web app you're using right now teaches the <em>mechanics</em>. Real Bitcoin Core in regtest mode lets you build software against the actual protocol. Different goals — pick based on what you want to do next.
-    </p>
-    <div class="compare-grid">
-      <div class="compare-side sim">
-        <h4>This web app</h4>
-        <div class="who">simulator · runs in your browser · no install</div>
-        <div class="compare-label good">✓ Good for understanding</div>
-        <ul>
-          <li>What gets hashed (real SHA-256 of real 80-byte headers)</li>
-          <li>How the nonce search works, visually, in real time</li>
-          <li>How blocks chain via prev-hash</li>
-          <li>How merkle roots are built from transactions</li>
-          <li>The mempool → confirmation flow</li>
-          <li>Trying basic <code>bitcoin-cli</code> command syntax</li>
-        </ul>
-        <div class="compare-label bad">✗ What's faked or missing</div>
-        <ul>
-          <li>No real keys or signatures — addresses are random <code>bcrt1q…</code> strings</li>
-          <li>No UTXOs — wallet uses a balance model</li>
-          <li>No Bitcoin Script execution (no <code>OP_CHECKSIG</code>, no multisig, no timelocks)</li>
-          <li>No peer networking — there's only one "node" (this page)</li>
-          <li>No real consensus rule enforcement — sends always succeed if you have balance</li>
-        </ul>
-        <div class="when"><b>Use when:</b> you want to learn how Bitcoin works as a system, without installing anything.</div>
-      </div>
-
-      <div class="compare-side real">
-        <h4>Real regtest (bitcoind)</h4>
-        <div class="who">actual Bitcoin Core C++ · runs locally · sandboxed chain</div>
-        <div class="compare-label good">✓ Good for building</div>
-        <ul>
-          <li><strong>Real keys, signatures, UTXOs, scripts.</strong> Sign actual transactions, run real ECDSA &amp; Schnorr verification, work with the UTXO model the way real Bitcoin does.</li>
-          <li><strong>Smart contracts.</strong> Multisig, timelocks (<code>OP_CSV</code>, <code>OP_CLTV</code>), hashlocks, taproot, miniscript.</li>
-          <li><strong>RPC over HTTP.</strong> Connect any tool — <code>python-bitcoinrpc</code>, <code>bitcoinjs-lib</code>, <code>btcd</code>, your own scripts — to <code>localhost:18443</code>.</li>
-          <li><strong>Multi-node networking.</strong> Run two daemons on different ports, connect them, watch the peer protocol gossip blocks. Trigger an actual chain reorg.</li>
-          <li><strong>Exact consensus errors.</strong> <code>submitblock</code> a malformed block and Core gives you the precise rejection reason — the cleanest documentation of consensus rules anywhere.</li>
-          <li><strong>Lightning, PSBT, descriptor wallets, RBF, package relay</strong> — the full Bitcoin developer surface.</li>
-        </ul>
-        <div class="compare-label bad">✗ Requires</div>
-        <ul>
-          <li>Installing Bitcoin Core (~600 MB)</li>
-          <li>A small <code>bitcoin.conf</code> file</li>
-          <li>Running a daemon process in the background</li>
-        </ul>
-        <div class="when"><b>Use when:</b> you want to write or test software that will eventually run against real Bitcoin.</div>
-      </div>
-    </div>
-    <p style="color: var(--text-dim); font-size: 13px; margin: 18px 0 0; line-height: 1.6;">
-      The natural path: get comfortable with the concepts here, then if you're going further, follow the steps below to set up the real thing. <strong style="color: var(--text);">Anything you build against real regtest works identically on mainnet</strong> — same C++, same consensus rules, just a different chain ID and a difficulty floor. That's the whole point of regtest.
-    </p>
-  </div>
-
-  <div class="grid grid-2">
-    <div class="card">
-      <h3>Step 1 · Install Bitcoin Core</h3>
-      <p class="small">Get it from <a href="https://bitcoincore.org/" target="_blank" rel="noopener">bitcoincore.org</a>. Verify signatures if you care. On Debian/Ubuntu:</p>
-      <div class="terminal">
-<span class="prompt">$</span> <span class="cmd">sudo apt install bitcoind</span>
-      </div>
-      <p class="small" style="margin-top: 10px;">You only need <code>bitcoind</code> (daemon) and <code>bitcoin-cli</code> (RPC client). The <code>bitcoin-qt</code> GUI is optional and not useful for regtest.</p>
-    </div>
-
-    <div class="card">
-      <h3>Step 2 · Config file</h3>
-      <p class="small">Create <code>~/.bitcoin/bitcoin.conf</code> (Linux/Mac) or <code>%APPDATA%\Bitcoin\bitcoin.conf</code> (Windows):</p>
-      <div class="terminal" data-copyable>
-        <button class="copy-btn" onclick="copyText(this)">copy</button>
-<span class="out">regtest=1
-server=1
-rpcuser=test
-rpcpassword=test
-fallbackfee=0.0002
-
-[regtest]
-rpcport=18443</span>
-      </div>
-      <p class="small" style="margin-top: 10px;"><code>fallbackfee</code> is needed because regtest has no fee market and the wallet would otherwise refuse to send. Credentials are local-only so <code>test/test</code> is fine.</p>
-    </div>
-
-    <div class="card">
-      <h3>Step 3 · Start the daemon</h3>
-      <div class="terminal">
-<span class="prompt">$</span> <span class="cmd">bitcoind -regtest -daemon</span>
-<span class="out">Bitcoin Core starting</span>
-      </div>
-      <p class="small" style="margin-top: 10px;">Logs go to <code>~/.bitcoin/regtest/debug.log</code> if you want to watch.</p>
-    </div>
-
-    <div class="card">
-      <h3>Step 4 · Wallet & address</h3>
-      <div class="terminal">
-<span class="prompt">$</span> <span class="cmd">bitcoin-cli -regtest createwallet "playground"</span>
-<span class="prompt">$</span> <span class="cmd">ADDR=$(bitcoin-cli -regtest getnewaddress)</span>
-<span class="prompt">$</span> <span class="cmd">echo $ADDR</span>
-<span class="out">bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080</span>
-      </div>
-      <p class="small" style="margin-top: 10px;">The <code>bcrt1q…</code> prefix is regtest's equivalent of <code>bc1</code> on mainnet.</p>
-    </div>
-
-    <div class="card">
-      <h3>Step 5 · Mine your first 101 blocks</h3>
-      <div class="terminal">
-<span class="prompt">$</span> <span class="cmd">bitcoin-cli -regtest generatetoaddress 101 $ADDR</span>
-<span class="prompt">$</span> <span class="cmd">bitcoin-cli -regtest getbalance</span>
-<span class="out">50.00000000</span>
-      </div>
-      <p class="small" style="margin-top: 10px;"><b>Why 101?</b> Coinbase rewards need 100 confirmations to mature. 101 blocks = exactly one spendable reward (block 1's coinbase, with 100 blocks built on top). Subsidy starts at 50 BTC, same schedule as mainnet.</p>
-    </div>
-
-    <div class="card">
-      <h3>Cleanup</h3>
-      <div class="terminal">
-<span class="prompt">$</span> <span class="cmd">bitcoin-cli -regtest stop</span>
-<span class="comment"># wipe and restart fresh:</span>
-<span class="prompt">$</span> <span class="cmd">rm -rf ~/.bitcoin/regtest</span>
-      </div>
-      <p class="small" style="margin-top: 10px;">Regtest is sandboxed. The data directory is self-contained. Coins can't leave regtest. The chain doesn't connect to external peers by default.</p>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top: 20px;">
-    <h3>Why this is the right environment for learning</h3>
-    <p style="color: var(--text-muted); margin: 0;">
-      You can break things on purpose without consequences. Submit a block with a bad merkle root and read the exact consensus error.
-      Reorg the chain by spinning up two nodes and seeing the shorter one orphaned. Build a block by hand from <code>getblocktemplate</code>
-      and watch <code>submitblock</code> accept it. None of this is possible on mainnet because the lottery framing ($) gets in the way of the mechanics.
-      Regtest strips it back to: <i>here is what the protocol actually does.</i>
-    </p>
-  </div>
 </section>
 
 <!-- ============== MINING LAB ============== -->
@@ -1873,40 +1569,8 @@ rpcport=18443</span>
   </div>
 </section>
 
-<!-- ============== CONSOLE ============== -->
-<section class="section" id="section-console">
-  <h2>RPC Console</h2>
-  <p class="lede">Type <code>bitcoin-cli</code> commands. The simulator responds with realistic JSON, computed against the same chain state you see in the other tabs.</p>
-
-  <div class="row" style="margin-bottom: 12px;">
-    <span class="small">Try:</span>
-    <span class="help-pill" data-cmd="getblockchaininfo">getblockchaininfo</span>
-    <span class="help-pill" data-cmd="getblockcount">getblockcount</span>
-    <span class="help-pill" data-cmd="getbalance">getbalance</span>
-    <span class="help-pill" data-cmd="getnewaddress">getnewaddress</span>
-    <span class="help-pill" data-cmd="getrawmempool">getrawmempool</span>
-    <span class="help-pill" data-cmd="getblockhash 0">getblockhash 0</span>
-    <span class="help-pill" data-cmd="getmininginfo">getmininginfo</span>
-    <span class="help-pill" data-cmd="help">help</span>
-  </div>
-
-  <div class="console">
-    <div class="console-output" id="console-output"></div>
-    <div class="console-input-wrap">
-      <span class="ps">$ bitcoin-cli -regtest</span>
-      <input type="text" id="console-input" placeholder="getblockcount" autocomplete="off" spellcheck="false">
-    </div>
-  </div>
-  <p class="small" style="margin-top: 10px;">↑/↓ for command history · supports a useful subset of the real RPC surface.</p>
-</section>
-
 </main>
 
-<footer class="sim-footer">
-  <span class="label fake">SIMULATED</span> keys, signatures, UTXOs, peer networking ·
-  <span class="label real">REAL</span> SHA-256, header serialization, merkle root, proof-of-work ·
-  no actual bitcoin involved at any point
-</footer>
 
 <div class="toast-stack" id="toast-stack"></div>
 
@@ -2197,12 +1861,6 @@ function highlightHash(hex, leadingZeros) {
   }
   return `<span class="rest">${hex}</span>`;
 }
-
-function copyText(btn) {
-  const text = btn.parentElement.innerText.replace(/^copy\n/, '').trim();
-  navigator.clipboard.writeText(text).then(() => { btn.textContent = 'copied'; setTimeout(() => btn.textContent = 'copy', 1200); });
-}
-window.copyText = copyText;
 
 /* ==============================================================
    Wallet logic
@@ -2808,228 +2466,6 @@ $('#btn-self-send').onclick = () => {
   prepareTemplate(ensureMiningAddress());
   renderAll();
 };
-
-/* ==============================================================
-   RPC console
-   ============================================================== */
-const consoleHistory = [];
-let historyIdx = -1;
-
-function consoleWrite(text, cls = 'out') {
-  const out = $('#console-output');
-  const lines = String(text).split('\n');
-  for (const line of lines) {
-    const div = document.createElement('div');
-    div.className = 'console-line ' + cls;
-    div.textContent = line;
-    out.appendChild(div);
-  }
-  out.scrollTop = out.scrollHeight;
-}
-
-function consolePrintCmd(cmd) {
-  const div = document.createElement('div');
-  div.className = 'console-line cmd';
-  div.textContent = cmd;
-  $('#console-output').appendChild(div);
-}
-
-function jsonStr(obj) { return JSON.stringify(obj, null, 2); }
-
-const rpc = {
-  help() {
-    return [
-      'Available commands (subset of real bitcoin-cli):',
-      '  getblockchaininfo          - chain status',
-      '  getblockcount              - height of best block',
-      '  getbestblockhash           - hash of best block',
-      '  getblockhash <height>      - hash of block at height',
-      '  getblock <hash> [verbosity] - block data (verbosity 0|1|2)',
-      '  getmininginfo              - mining stats',
-      '  getbalance                 - confirmed wallet balance',
-      '  getnewaddress              - generate a new address',
-      '  listreceivedbyaddress      - addresses with received amounts',
-      '  getrawmempool              - txids in mempool',
-      '  gettransaction <txid>      - tx details',
-      '  sendtoaddress <addr> <amt> - create + broadcast a tx',
-      '  generatetoaddress <n> <addr> - mine n blocks',
-      '  stop                       - (no-op in simulator)',
-      '  clear                      - clear the console',
-    ].join('\n');
-  },
-  clear() { $('#console-output').innerHTML = ''; return null; },
-  stop() { return 'Bitcoin Core stopping (simulator: no-op)'; },
-  getblockchaininfo() {
-    const tip = state.chain[state.chain.length - 1];
-    return jsonStr({
-      chain: 'regtest',
-      blocks: tip.height,
-      headers: tip.height,
-      bestblockhash: tip.hash,
-      difficulty: 4.656542373906925e-10,
-      mediantime: tip.time,
-      verificationprogress: 1,
-      initialblockdownload: false,
-      chainwork: '00'.repeat(28) + (tip.height + 1).toString(16).padStart(8, '0'),
-      pruned: false,
-      warnings: '',
-    });
-  },
-  getblockcount() { return String(state.chain.length - 1); },
-  getbestblockhash() { return state.chain[state.chain.length - 1].hash; },
-  getblockhash(args) {
-    const h = parseInt(args[0], 10);
-    if (isNaN(h) || h < 0 || h >= state.chain.length) throw new Error('Block height out of range');
-    return state.chain[h].hash;
-  },
-  getblock(args) {
-    const hash = args[0];
-    const verbosity = args[1] ? parseInt(args[1], 10) : 1;
-    const b = state.chain.find(x => x.hash === hash);
-    if (!b) throw new Error('Block not found');
-    const base = {
-      hash: b.hash,
-      confirmations: state.chain.length - b.height,
-      height: b.height,
-      version: b.version,
-      versionHex: b.version.toString(16).padStart(8, '0'),
-      merkleroot: b.merkleRoot,
-      time: b.time,
-      mediantime: b.time,
-      nonce: b.nonce,
-      bits: b.bits.toString(16),
-      difficulty: 4.656542373906925e-10,
-      previousblockhash: b.prevHash,
-      nTx: b.txs.length,
-    };
-    if (verbosity === 0) {
-      // serialized hex (header only here)
-      return toHex(buildHeader({ version: b.version, prevHash: b.prevHash, merkleRoot: b.merkleRoot, time: b.time, bits: b.bits, nonce: b.nonce }));
-    }
-    if (verbosity === 1) return jsonStr({ ...base, tx: b.txs.map(t => t.txid) });
-    return jsonStr({ ...base, tx: b.txs.map(t => ({
-      txid: t.txid,
-      hash: t.txid,
-      type: t.type || 'transfer',
-      ...(t.type === 'coinbase' ? { vin: [{ coinbase: t.scriptSig, sequence: 4294967295 }], vout: [{ value: t.amount/1e8, n: 0, scriptPubKey: { addresses: [t.to] } }] } : {
-        vin: [{ txid: '...', vout: 0 }],
-        vout: [{ value: t.amount/1e8, n: 0, scriptPubKey: { addresses: [t.to] } }],
-      }),
-    })) });
-  },
-  getmininginfo() {
-    return jsonStr({
-      blocks: state.chain.length - 1,
-      difficulty: 4.656542373906925e-10,
-      networkhashps: 0,
-      pooledtx: state.mempool.length,
-      chain: 'regtest',
-    });
-  },
-  getbalance() { return fmtBtc(walletBalance().confirmed); },
-  getnewaddress() {
-    const a = newAddress();
-    renderAll();
-    return a;
-  },
-  listreceivedbyaddress() {
-    const tipHeight = state.chain.length - 1;
-    const out = state.addresses.map(a => {
-      let amount = 0, count = 0;
-      for (const tx of state.walletTxs) {
-        if (tx.height === null) continue;
-        if (tx.addr !== a.addr) continue;
-        if (tx.type === 'coinbase') {
-          if (tipHeight - tx.height + 1 >= 100) { amount += tx.amount; count++; }
-        } else if (tx.type === 'receive' || tx.type === 'self') { amount += tx.amount; count++; }
-      }
-      return { address: a.addr, amount: amount/1e8, confirmations: tipHeight, label: a.label, txids_count: count };
-    });
-    return jsonStr(out);
-  },
-  getrawmempool() { return jsonStr(state.mempool.map(t => t.txid)); },
-  gettransaction(args) {
-    const txid = args[0];
-    const inMempool = state.mempool.find(t => t.txid === txid);
-    if (inMempool) return jsonStr({ txid, confirmations: 0, in_mempool: true, amount: -inMempool.amount/1e8, fee: -inMempool.fee/1e8 });
-    for (const b of state.chain) {
-      const t = b.txs.find(x => x.txid === txid);
-      if (t) return jsonStr({ txid, blockhash: b.hash, blockheight: b.height, confirmations: state.chain.length - b.height, time: b.time, type: t.type || 'transfer' });
-    }
-    throw new Error('Invalid or non-wallet transaction id');
-  },
-  sendtoaddress(args) {
-    const to = args[0];
-    const amount = Math.round(parseFloat(args[1]) * 1e8);
-    if (!to || !to.startsWith('bcrt1')) throw new Error('Invalid bcrt1 address');
-    if (!amount) throw new Error('Invalid amount');
-    if (state.addresses.length === 0) throw new Error('No wallet addresses (run getnewaddress first)');
-    const from = state.addresses[0].addr;
-    const bal = walletBalance();
-    if (amount + FEE > bal.available) throw new Error('Insufficient funds');
-    const tx = makeTx({ from, to, amount, fee: FEE, fromOurs: true });
-    state.mempool.push(tx);
-    prepareTemplate(ensureMiningAddress());
-    renderAll();
-    return tx.txid;
-  },
-  async generatetoaddress(args) {
-    const n = parseInt(args[0], 10);
-    const addr = args[1];
-    if (!n || !addr) throw new Error('usage: generatetoaddress <n> <addr>');
-    const hashes = [];
-    for (let i = 0; i < n; i++) {
-      const block = await mineBlock(addr);
-      if (block) hashes.push(block.hash);
-    }
-    return jsonStr(hashes);
-  },
-};
-
-async function runRpc(line) {
-  consolePrintCmd('bitcoin-cli -regtest ' + line);
-  const parts = line.trim().split(/\s+/);
-  const cmd = parts[0];
-  const args = parts.slice(1);
-  if (!cmd) return;
-  if (!rpc[cmd]) {
-    consoleWrite('error: unknown command "' + cmd + '" (try "help")', 'err');
-    return;
-  }
-  try {
-    const result = await rpc[cmd](args);
-    if (result !== null && result !== undefined) consoleWrite(result, 'out');
-  } catch (e) {
-    consoleWrite('error: ' + e.message, 'err');
-  }
-}
-
-$('#console-input').addEventListener('keydown', async (e) => {
-  if (e.key === 'Enter') {
-    const v = e.target.value.trim();
-    if (!v) return;
-    consoleHistory.push(v);
-    historyIdx = consoleHistory.length;
-    e.target.value = '';
-    await runRpc(v);
-  } else if (e.key === 'ArrowUp') {
-    if (historyIdx > 0) { historyIdx--; e.target.value = consoleHistory[historyIdx]; }
-    e.preventDefault();
-  } else if (e.key === 'ArrowDown') {
-    if (historyIdx < consoleHistory.length - 1) { historyIdx++; e.target.value = consoleHistory[historyIdx]; }
-    else { historyIdx = consoleHistory.length; e.target.value = ''; }
-    e.preventDefault();
-  }
-});
-
-$$('.help-pill').forEach(p => p.onclick = async () => {
-  $('#console-input').value = p.dataset.cmd;
-  $('#console-input').focus();
-});
-
-// boot console
-consoleWrite('Bitcoin Core simulator · regtest mode · type "help"', 'note');
-consoleWrite('', 'note');
 
 /* ==============================================================
    Tutorial — live hash demo + mining attempts demo
