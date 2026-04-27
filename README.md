@@ -53,7 +53,7 @@ Each phase produces concrete artifacts the protocol either accepts or rejects �
 
 Each phase doc has a **Verification** section defining per-artifact criteria + runnable check commands. Phase 1 ships [`scripts/verify-tx.py`](scripts/verify-tx.py): feed it a transaction hex and it tells you whether the bytes parse as a valid Bitcoin tx and whether the output type matches your label. Pass/fail is deterministic — you, your reader, and any future verifier all run the same check and get the same answer. Later phases add checks against a real `bitcoind` (Phase 3+) and against multisig / timelock / reorg behaviour (Phases 4 and 6).
 
-That's the difference between this and a green checkmark: the artifacts and the verification are public, runnable, and reproducible.
+That's the difference between this and a green checkmark: the artifacts and the verification are public, runnable, and reproducible. See [docs/verification.md](docs/verification.md) for the full model — what ships today, how the flow works, and what's coming.
 
 ### How to start your own
 

@@ -157,7 +157,7 @@ Phase 2 leans heavily on these mental models — it's worth the extra session if
 
 ## Verification
 
-The whole point of this path is that your evidence is checkable — not a green checkmark that nobody can verify. Phase 1's machine-checkable evidence is the three transaction-hex artifacts (P2PKH, P2WPKH, P2TR). Two checks cover the vast majority of what can go wrong; both run via [`scripts/verify-tx.py`](../scripts/verify-tx.py) (a small Python helper using `python-bitcointx`, already installed by rawBit).
+The whole point of this path is that your evidence is checkable — not a green checkmark that nobody can verify. (See [docs/verification.md](verification.md) for how this section fits into the larger model and what's coming for later phases.) Phase 1's machine-checkable evidence is the three transaction-hex artifacts (P2PKH, P2WPKH, P2TR). Two checks cover the vast majority of what can go wrong; both run via [`scripts/verify-tx.py`](../scripts/verify-tx.py) (a small Python helper using `python-bitcointx`, already installed by rawBit).
 
 ### Check 1 — The hex parses as a valid Bitcoin transaction
 
