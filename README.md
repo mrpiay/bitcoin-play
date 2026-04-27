@@ -60,12 +60,16 @@ Each phase produces concrete artifacts the protocol either accepts or rejects �
    ```
 3. **Create a top-level `proof-of-work/` folder** with one markdown file per phase. See the [reference layout](https://github.com/mrpiay-lab/bitcoin-play-engineer/tree/main/proof-of-work) for the per-phase template.
 4. **Document each phase as you complete it** — what you did, commands and outputs, artifacts (raw hex, txids, block hashes, screenshots), and a short reflection. Commit and push.
-5. **Sync upstream doc rewrites without trampling your evidence:**
-   ```bash
-   git fetch upstream
-   git checkout upstream/main -- docs/<file>
-   git commit -m "Sync <file> from upstream"
-   ```
+5. **Sync upstream doc rewrites.** When new phase docs land in upstream `bitcoin-play`:
+   - **Most learners (vanilla fork):** click **"Sync fork"** on your fork's GitHub page, or run `git pull upstream main` locally. Works as long as you haven't modified upstream files; the new `proof-of-work/` content doesn't conflict.
+   - **If you've customized upstream files** (e.g., personalized the README): pull selectively instead of merging the whole branch.
+     ```bash
+     git fetch upstream
+     git checkout upstream/main -- docs/03-phase1-tx-anatomy.md   # one file
+     # or a whole folder: git checkout upstream/main -- docs/
+     git commit -m "Sync from upstream"
+     git push
+     ```
 6. **Get listed.** Once you've completed any phase, open a small PR adding your fork to the [Completions roster](https://github.com/mrpiay-lab/bitcoin-play-engineer#completions) on `bitcoin-play-engineer`. The bar is concrete protocol-checkable evidence in your `proof-of-work/` folder — not a screenshot of a green checkmark.
 
 ## Realistic pacing
