@@ -16,4 +16,4 @@ For per-phase time estimates, see the [pacing section in the intro](docs/00-intr
 
 ---
 
-[← Phase 7: Capstone](docs/09-phase7-capstone.md) · [README](README.md)
+[README](README.md)
